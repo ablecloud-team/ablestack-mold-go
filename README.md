@@ -1,21 +1,12 @@
-# cloudstack-go
+# ablestack-mold-go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/ablecloud-team/ablestack-mold-go/v2/cloudstack.svg)](https://pkg.go.dev/github.com/ablecloud-team/ablestack-mold-go/v2/cloudstack)
 
-A CloudStack API client enabling Go programs to interact with CloudStack in a simple and uniform way
+A ABLESTACK Mold API client enabling Go programs to interact with CloudStack in a simple and uniform way
 
 ## Status
 
-This package covers the complete CloudStack API and is well tested. There may be some untested corner cases as there are over 600 API commands, but over all, it's safe to use this package.
-
-To be able to find the API command you want, they are grouped by 'services' which match the grouping you can see/find on the [CloudStack API docs](https://cloudstack.apache.org/api/apidocs-4.18/) website.
-
-## Usage
-
-The cloudstack package is always generated against the latest stable CloudStack release (currently v4.18.x). As long as the API changes were minimum across subsequent CloudStack releases it was possible to have the generator code handle API changes such that they were backward compatible.
-However, over time, with frequent API changes observed across releases of Apache CloudStack(ACS), we will have the SDK releases tagged based on the ACS version.
-
-Please see the package documentation on [go.dev](https://pkg.go.dev/github.com/ablecloud-team/ablestack-mold-go/v2/cloudstack).
+This package covers the complete ABLESTACK Mold API and is well tested. There may be some untested corner cases as there are over 600 API commands, but over all, it's safe to use this package.
 
 ## Example
 
