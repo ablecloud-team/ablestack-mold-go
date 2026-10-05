@@ -42,6 +42,8 @@ type DomainServiceIface interface {
 	GetDomainID(name string, opts ...OptionFunc) (string, int, error)
 	GetDomainByName(name string, opts ...OptionFunc) (*Domain, int, error)
 	GetDomainByID(id string, opts ...OptionFunc) (*Domain, int, error)
+	MoveDomain(p *MoveDomainParams) (*MoveDomainResponse, error)
+	NewMoveDomainParams(domainid string, parentdomainid string) *MoveDomainParams
 	UpdateDomain(p *UpdateDomainParams) (*UpdateDomainResponse, error)
 	NewUpdateDomainParams(id string) *UpdateDomainParams
 }
@@ -165,7 +167,7 @@ func (s *DomainService) NewCreateDomainParams(name string) *CreateDomainParams {
 
 // Creates a domain
 func (s *DomainService) CreateDomain(p *CreateDomainParams) (*CreateDomainResponse, error) {
-	resp, err := s.cs.newRequest("createDomain", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createDomain", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -183,11 +185,23 @@ func (s *DomainService) CreateDomain(p *CreateDomainParams) (*CreateDomainRespon
 }
 
 type CreateDomainResponse struct {
+	Backupavailable           string            `json:"backupavailable"`
+	Backuplimit               string            `json:"backuplimit"`
+	Backupstorageavailable    string            `json:"backupstorageavailable"`
+	Backupstoragelimit        string            `json:"backupstoragelimit"`
+	Backupstoragetotal        int64             `json:"backupstoragetotal"`
+	Backuptotal               int64             `json:"backuptotal"`
+	Bucketavailable           string            `json:"bucketavailable"`
+	Bucketlimit               string            `json:"bucketlimit"`
+	Buckettotal               int64             `json:"buckettotal"`
 	Cpuavailable              string            `json:"cpuavailable"`
 	Cpulimit                  string            `json:"cpulimit"`
 	Cputotal                  int64             `json:"cputotal"`
 	Created                   string            `json:"created"`
 	Domaindetails             map[string]string `json:"domaindetails"`
+	Gpuavailable              string            `json:"gpuavailable"`
+	Gpulimit                  string            `json:"gpulimit"`
+	Gputotal                  int64             `json:"gputotal"`
 	Hasannotations            bool              `json:"hasannotations"`
 	Haschild                  bool              `json:"haschild"`
 	Icon                      interface{}       `json:"icon"`
@@ -206,6 +220,9 @@ type CreateDomainResponse struct {
 	Networkdomain             string            `json:"networkdomain"`
 	Networklimit              string            `json:"networklimit"`
 	Networktotal              int64             `json:"networktotal"`
+	Objectstorageavailable    string            `json:"objectstorageavailable"`
+	Objectstoragelimit        string            `json:"objectstoragelimit"`
+	Objectstoragetotal        int64             `json:"objectstoragetotal"`
 	Parentdomainid            string            `json:"parentdomainid"`
 	Parentdomainname          string            `json:"parentdomainname"`
 	Path                      string            `json:"path"`
@@ -222,6 +239,7 @@ type CreateDomainResponse struct {
 	Snapshotlimit             string            `json:"snapshotlimit"`
 	Snapshottotal             int64             `json:"snapshottotal"`
 	State                     string            `json:"state"`
+	Taggedresources           []string          `json:"taggedresources"`
 	Templateavailable         string            `json:"templateavailable"`
 	Templatelimit             string            `json:"templatelimit"`
 	Templatetotal             int64             `json:"templatetotal"`
@@ -308,7 +326,7 @@ func (s *DomainService) NewDeleteDomainParams(id string) *DeleteDomainParams {
 
 // Deletes a specified domain
 func (s *DomainService) DeleteDomain(p *DeleteDomainParams) (*DeleteDomainResponse, error) {
-	resp, err := s.cs.newRequest("deleteDomain", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteDomain", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -664,11 +682,23 @@ type ListDomainChildrenResponse struct {
 }
 
 type DomainChildren struct {
+	Backupavailable           string            `json:"backupavailable"`
+	Backuplimit               string            `json:"backuplimit"`
+	Backupstorageavailable    string            `json:"backupstorageavailable"`
+	Backupstoragelimit        string            `json:"backupstoragelimit"`
+	Backupstoragetotal        int64             `json:"backupstoragetotal"`
+	Backuptotal               int64             `json:"backuptotal"`
+	Bucketavailable           string            `json:"bucketavailable"`
+	Bucketlimit               string            `json:"bucketlimit"`
+	Buckettotal               int64             `json:"buckettotal"`
 	Cpuavailable              string            `json:"cpuavailable"`
 	Cpulimit                  string            `json:"cpulimit"`
 	Cputotal                  int64             `json:"cputotal"`
 	Created                   string            `json:"created"`
 	Domaindetails             map[string]string `json:"domaindetails"`
+	Gpuavailable              string            `json:"gpuavailable"`
+	Gpulimit                  string            `json:"gpulimit"`
+	Gputotal                  int64             `json:"gputotal"`
 	Hasannotations            bool              `json:"hasannotations"`
 	Haschild                  bool              `json:"haschild"`
 	Icon                      interface{}       `json:"icon"`
@@ -687,6 +717,9 @@ type DomainChildren struct {
 	Networkdomain             string            `json:"networkdomain"`
 	Networklimit              string            `json:"networklimit"`
 	Networktotal              int64             `json:"networktotal"`
+	Objectstorageavailable    string            `json:"objectstorageavailable"`
+	Objectstoragelimit        string            `json:"objectstoragelimit"`
+	Objectstoragetotal        int64             `json:"objectstoragetotal"`
 	Parentdomainid            string            `json:"parentdomainid"`
 	Parentdomainname          string            `json:"parentdomainname"`
 	Path                      string            `json:"path"`
@@ -703,6 +736,7 @@ type DomainChildren struct {
 	Snapshotlimit             string            `json:"snapshotlimit"`
 	Snapshottotal             int64             `json:"snapshottotal"`
 	State                     string            `json:"state"`
+	Taggedresources           []string          `json:"taggedresources"`
 	Templateavailable         string            `json:"templateavailable"`
 	Templatelimit             string            `json:"templatelimit"`
 	Templatetotal             int64             `json:"templatetotal"`
@@ -758,6 +792,9 @@ func (p *ListDomainsParams) toURLValues() url.Values {
 	if v, found := p.p["showicon"]; found {
 		vv := strconv.FormatBool(v.(bool))
 		u.Set("showicon", vv)
+	}
+	if v, found := p.p["tag"]; found {
+		u.Set("tag", v.(string))
 	}
 	return u
 }
@@ -951,6 +988,27 @@ func (p *ListDomainsParams) GetShowicon() (bool, bool) {
 	return value, ok
 }
 
+func (p *ListDomainsParams) SetTag(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["tag"] = v
+}
+
+func (p *ListDomainsParams) ResetTag() {
+	if p.p != nil && p.p["tag"] != nil {
+		delete(p.p, "tag")
+	}
+}
+
+func (p *ListDomainsParams) GetTag() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["tag"].(string)
+	return value, ok
+}
+
 // You should always use this function to get a new ListDomainsParams instance,
 // as then you are sure you have configured all required params
 func (s *DomainService) NewListDomainsParams() *ListDomainsParams {
@@ -1063,11 +1121,23 @@ type ListDomainsResponse struct {
 }
 
 type Domain struct {
+	Backupavailable           string            `json:"backupavailable"`
+	Backuplimit               string            `json:"backuplimit"`
+	Backupstorageavailable    string            `json:"backupstorageavailable"`
+	Backupstoragelimit        string            `json:"backupstoragelimit"`
+	Backupstoragetotal        int64             `json:"backupstoragetotal"`
+	Backuptotal               int64             `json:"backuptotal"`
+	Bucketavailable           string            `json:"bucketavailable"`
+	Bucketlimit               string            `json:"bucketlimit"`
+	Buckettotal               int64             `json:"buckettotal"`
 	Cpuavailable              string            `json:"cpuavailable"`
 	Cpulimit                  string            `json:"cpulimit"`
 	Cputotal                  int64             `json:"cputotal"`
 	Created                   string            `json:"created"`
 	Domaindetails             map[string]string `json:"domaindetails"`
+	Gpuavailable              string            `json:"gpuavailable"`
+	Gpulimit                  string            `json:"gpulimit"`
+	Gputotal                  int64             `json:"gputotal"`
 	Hasannotations            bool              `json:"hasannotations"`
 	Haschild                  bool              `json:"haschild"`
 	Icon                      interface{}       `json:"icon"`
@@ -1086,6 +1156,9 @@ type Domain struct {
 	Networkdomain             string            `json:"networkdomain"`
 	Networklimit              string            `json:"networklimit"`
 	Networktotal              int64             `json:"networktotal"`
+	Objectstorageavailable    string            `json:"objectstorageavailable"`
+	Objectstoragelimit        string            `json:"objectstoragelimit"`
+	Objectstoragetotal        int64             `json:"objectstoragetotal"`
 	Parentdomainid            string            `json:"parentdomainid"`
 	Parentdomainname          string            `json:"parentdomainname"`
 	Path                      string            `json:"path"`
@@ -1102,6 +1175,162 @@ type Domain struct {
 	Snapshotlimit             string            `json:"snapshotlimit"`
 	Snapshottotal             int64             `json:"snapshottotal"`
 	State                     string            `json:"state"`
+	Taggedresources           []string          `json:"taggedresources"`
+	Templateavailable         string            `json:"templateavailable"`
+	Templatelimit             string            `json:"templatelimit"`
+	Templatetotal             int64             `json:"templatetotal"`
+	Vmavailable               string            `json:"vmavailable"`
+	Vmlimit                   string            `json:"vmlimit"`
+	Vmtotal                   int64             `json:"vmtotal"`
+	Volumeavailable           string            `json:"volumeavailable"`
+	Volumelimit               string            `json:"volumelimit"`
+	Volumetotal               int64             `json:"volumetotal"`
+	Vpcavailable              string            `json:"vpcavailable"`
+	Vpclimit                  string            `json:"vpclimit"`
+	Vpctotal                  int64             `json:"vpctotal"`
+}
+
+type MoveDomainParams struct {
+	p map[string]interface{}
+}
+
+func (p *MoveDomainParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["domainid"]; found {
+		u.Set("domainid", v.(string))
+	}
+	if v, found := p.p["parentdomainid"]; found {
+		u.Set("parentdomainid", v.(string))
+	}
+	return u
+}
+
+func (p *MoveDomainParams) SetDomainid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["domainid"] = v
+}
+
+func (p *MoveDomainParams) ResetDomainid() {
+	if p.p != nil && p.p["domainid"] != nil {
+		delete(p.p, "domainid")
+	}
+}
+
+func (p *MoveDomainParams) GetDomainid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["domainid"].(string)
+	return value, ok
+}
+
+func (p *MoveDomainParams) SetParentdomainid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["parentdomainid"] = v
+}
+
+func (p *MoveDomainParams) ResetParentdomainid() {
+	if p.p != nil && p.p["parentdomainid"] != nil {
+		delete(p.p, "parentdomainid")
+	}
+}
+
+func (p *MoveDomainParams) GetParentdomainid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["parentdomainid"].(string)
+	return value, ok
+}
+
+// You should always use this function to get a new MoveDomainParams instance,
+// as then you are sure you have configured all required params
+func (s *DomainService) NewMoveDomainParams(domainid string, parentdomainid string) *MoveDomainParams {
+	p := &MoveDomainParams{}
+	p.p = make(map[string]interface{})
+	p.p["domainid"] = domainid
+	p.p["parentdomainid"] = parentdomainid
+	return p
+}
+
+// Moves a domain and its children to a new parent domain.
+func (s *DomainService) MoveDomain(p *MoveDomainParams) (*MoveDomainResponse, error) {
+	resp, err := s.cs.newPostRequest("moveDomain", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var r MoveDomainResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return nil, err
+	}
+
+	return &r, nil
+}
+
+type MoveDomainResponse struct {
+	Backupavailable           string            `json:"backupavailable"`
+	Backuplimit               string            `json:"backuplimit"`
+	Backupstorageavailable    string            `json:"backupstorageavailable"`
+	Backupstoragelimit        string            `json:"backupstoragelimit"`
+	Backupstoragetotal        int64             `json:"backupstoragetotal"`
+	Backuptotal               int64             `json:"backuptotal"`
+	Bucketavailable           string            `json:"bucketavailable"`
+	Bucketlimit               string            `json:"bucketlimit"`
+	Buckettotal               int64             `json:"buckettotal"`
+	Cpuavailable              string            `json:"cpuavailable"`
+	Cpulimit                  string            `json:"cpulimit"`
+	Cputotal                  int64             `json:"cputotal"`
+	Created                   string            `json:"created"`
+	Domaindetails             map[string]string `json:"domaindetails"`
+	Gpuavailable              string            `json:"gpuavailable"`
+	Gpulimit                  string            `json:"gpulimit"`
+	Gputotal                  int64             `json:"gputotal"`
+	Hasannotations            bool              `json:"hasannotations"`
+	Haschild                  bool              `json:"haschild"`
+	Icon                      interface{}       `json:"icon"`
+	Id                        string            `json:"id"`
+	Ipavailable               string            `json:"ipavailable"`
+	Iplimit                   string            `json:"iplimit"`
+	Iptotal                   int64             `json:"iptotal"`
+	JobID                     string            `json:"jobid"`
+	Jobstatus                 int               `json:"jobstatus"`
+	Level                     int               `json:"level"`
+	Memoryavailable           string            `json:"memoryavailable"`
+	Memorylimit               string            `json:"memorylimit"`
+	Memorytotal               int64             `json:"memorytotal"`
+	Name                      string            `json:"name"`
+	Networkavailable          string            `json:"networkavailable"`
+	Networkdomain             string            `json:"networkdomain"`
+	Networklimit              string            `json:"networklimit"`
+	Networktotal              int64             `json:"networktotal"`
+	Objectstorageavailable    string            `json:"objectstorageavailable"`
+	Objectstoragelimit        string            `json:"objectstoragelimit"`
+	Objectstoragetotal        int64             `json:"objectstoragetotal"`
+	Parentdomainid            string            `json:"parentdomainid"`
+	Parentdomainname          string            `json:"parentdomainname"`
+	Path                      string            `json:"path"`
+	Primarystorageavailable   string            `json:"primarystorageavailable"`
+	Primarystoragelimit       string            `json:"primarystoragelimit"`
+	Primarystoragetotal       int64             `json:"primarystoragetotal"`
+	Projectavailable          string            `json:"projectavailable"`
+	Projectlimit              string            `json:"projectlimit"`
+	Projecttotal              int64             `json:"projecttotal"`
+	Secondarystorageavailable string            `json:"secondarystorageavailable"`
+	Secondarystoragelimit     string            `json:"secondarystoragelimit"`
+	Secondarystoragetotal     float64           `json:"secondarystoragetotal"`
+	Snapshotavailable         string            `json:"snapshotavailable"`
+	Snapshotlimit             string            `json:"snapshotlimit"`
+	Snapshottotal             int64             `json:"snapshottotal"`
+	State                     string            `json:"state"`
+	Taggedresources           []string          `json:"taggedresources"`
 	Templateavailable         string            `json:"templateavailable"`
 	Templatelimit             string            `json:"templatelimit"`
 	Templatetotal             int64             `json:"templatetotal"`
@@ -1211,7 +1440,7 @@ func (s *DomainService) NewUpdateDomainParams(id string) *UpdateDomainParams {
 
 // Updates a domain with a new name
 func (s *DomainService) UpdateDomain(p *UpdateDomainParams) (*UpdateDomainResponse, error) {
-	resp, err := s.cs.newRequest("updateDomain", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateDomain", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1229,11 +1458,23 @@ func (s *DomainService) UpdateDomain(p *UpdateDomainParams) (*UpdateDomainRespon
 }
 
 type UpdateDomainResponse struct {
+	Backupavailable           string            `json:"backupavailable"`
+	Backuplimit               string            `json:"backuplimit"`
+	Backupstorageavailable    string            `json:"backupstorageavailable"`
+	Backupstoragelimit        string            `json:"backupstoragelimit"`
+	Backupstoragetotal        int64             `json:"backupstoragetotal"`
+	Backuptotal               int64             `json:"backuptotal"`
+	Bucketavailable           string            `json:"bucketavailable"`
+	Bucketlimit               string            `json:"bucketlimit"`
+	Buckettotal               int64             `json:"buckettotal"`
 	Cpuavailable              string            `json:"cpuavailable"`
 	Cpulimit                  string            `json:"cpulimit"`
 	Cputotal                  int64             `json:"cputotal"`
 	Created                   string            `json:"created"`
 	Domaindetails             map[string]string `json:"domaindetails"`
+	Gpuavailable              string            `json:"gpuavailable"`
+	Gpulimit                  string            `json:"gpulimit"`
+	Gputotal                  int64             `json:"gputotal"`
 	Hasannotations            bool              `json:"hasannotations"`
 	Haschild                  bool              `json:"haschild"`
 	Icon                      interface{}       `json:"icon"`
@@ -1252,6 +1493,9 @@ type UpdateDomainResponse struct {
 	Networkdomain             string            `json:"networkdomain"`
 	Networklimit              string            `json:"networklimit"`
 	Networktotal              int64             `json:"networktotal"`
+	Objectstorageavailable    string            `json:"objectstorageavailable"`
+	Objectstoragelimit        string            `json:"objectstoragelimit"`
+	Objectstoragetotal        int64             `json:"objectstoragetotal"`
 	Parentdomainid            string            `json:"parentdomainid"`
 	Parentdomainname          string            `json:"parentdomainname"`
 	Path                      string            `json:"path"`
@@ -1268,6 +1512,7 @@ type UpdateDomainResponse struct {
 	Snapshotlimit             string            `json:"snapshotlimit"`
 	Snapshottotal             int64             `json:"snapshottotal"`
 	State                     string            `json:"state"`
+	Taggedresources           []string          `json:"taggedresources"`
 	Templateavailable         string            `json:"templateavailable"`
 	Templatelimit             string            `json:"templatelimit"`
 	Templatetotal             int64             `json:"templatetotal"`

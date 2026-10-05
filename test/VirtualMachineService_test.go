@@ -170,6 +170,18 @@ func TestVirtualMachineService(t *testing.T) {
 	}
 	t.Run("ListVirtualMachinesMetrics", testlistVirtualMachinesMetrics)
 
+	testlistVmsForImport := func(t *testing.T) {
+		if _, ok := response["listVmsForImport"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewListVmsForImportParams("host", "hypervisor", "zoneid")
+		_, err := client.VirtualMachine.ListVmsForImport(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ListVmsForImport", testlistVmsForImport)
+
 	testmigrateVirtualMachine := func(t *testing.T) {
 		if _, ok := response["migrateVirtualMachine"]; !ok {
 			t.Skipf("Skipping as no json response is provided in testdata")
@@ -259,6 +271,21 @@ func TestVirtualMachineService(t *testing.T) {
 		}
 	}
 	t.Run("ResetPasswordForVirtualMachine", testresetPasswordForVirtualMachine)
+
+	testresetUserDataForVirtualMachine := func(t *testing.T) {
+		if _, ok := response["resetUserDataForVirtualMachine"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewResetUserDataForVirtualMachineParams("id")
+		r, err := client.VirtualMachine.ResetUserDataForVirtualMachine(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("ResetUserDataForVirtualMachine", testresetUserDataForVirtualMachine)
 
 	testrestoreVirtualMachine := func(t *testing.T) {
 		if _, ok := response["restoreVirtualMachine"]; !ok {
@@ -358,5 +385,149 @@ func TestVirtualMachineService(t *testing.T) {
 		}
 	}
 	t.Run("ListVirtualMachinesUsageHistory", testlistVirtualMachinesUsageHistory)
+
+	testimportVm := func(t *testing.T) {
+		if _, ok := response["importVm"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewImportVmParams("clusterid", "hypervisor", "importsource", "name", "serviceofferingid", "zoneid")
+		r, err := client.VirtualMachine.ImportVm(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("ImportVm", testimportVm)
+
+	testunmanageVirtualMachine := func(t *testing.T) {
+		if _, ok := response["unmanageVirtualMachine"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewUnmanageVirtualMachineParams("id")
+		_, err := client.VirtualMachine.UnmanageVirtualMachine(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("UnmanageVirtualMachine", testunmanageVirtualMachine)
+
+	testlistUnmanagedInstances := func(t *testing.T) {
+		if _, ok := response["listUnmanagedInstances"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewListUnmanagedInstancesParams("clusterid")
+		_, err := client.VirtualMachine.ListUnmanagedInstances(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ListUnmanagedInstances", testlistUnmanagedInstances)
+
+	testimportUnmanagedInstance := func(t *testing.T) {
+		if _, ok := response["importUnmanagedInstance"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewImportUnmanagedInstanceParams("clusterid", "name", "serviceofferingid")
+		r, err := client.VirtualMachine.ImportUnmanagedInstance(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("ImportUnmanagedInstance", testimportUnmanagedInstance)
+
+	testlistImportVmTasks := func(t *testing.T) {
+		if _, ok := response["listImportVmTasks"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewListImportVmTasksParams("zoneid")
+		_, err := client.VirtualMachine.ListImportVmTasks(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ListImportVmTasks", testlistImportVmTasks)
+
+	testcreateVMSchedule := func(t *testing.T) {
+		if _, ok := response["createVMSchedule"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewCreateVMScheduleParams("action", "schedule", "timezone", "virtualmachineid")
+		r, err := client.VirtualMachine.CreateVMSchedule(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("CreateVMSchedule", testcreateVMSchedule)
+
+	testupdateVMSchedule := func(t *testing.T) {
+		if _, ok := response["updateVMSchedule"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewUpdateVMScheduleParams("id")
+		r, err := client.VirtualMachine.UpdateVMSchedule(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("UpdateVMSchedule", testupdateVMSchedule)
+
+	testlistVMSchedule := func(t *testing.T) {
+		if _, ok := response["listVMSchedule"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewListVMScheduleParams("virtualmachineid")
+		_, err := client.VirtualMachine.ListVMSchedule(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ListVMSchedule", testlistVMSchedule)
+
+	testdeleteVMSchedule := func(t *testing.T) {
+		if _, ok := response["deleteVMSchedule"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewDeleteVMScheduleParams("virtualmachineid")
+		_, err := client.VirtualMachine.DeleteVMSchedule(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("DeleteVMSchedule", testdeleteVMSchedule)
+
+	testassignVirtualMachineToBackupOffering := func(t *testing.T) {
+		if _, ok := response["assignVirtualMachineToBackupOffering"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewAssignVirtualMachineToBackupOfferingParams("backupofferingid", "virtualmachineid")
+		_, err := client.VirtualMachine.AssignVirtualMachineToBackupOffering(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("AssignVirtualMachineToBackupOffering", testassignVirtualMachineToBackupOffering)
+
+	testremoveVirtualMachineFromBackupOffering := func(t *testing.T) {
+		if _, ok := response["removeVirtualMachineFromBackupOffering"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VirtualMachine.NewRemoveVirtualMachineFromBackupOfferingParams("virtualmachineid")
+		_, err := client.VirtualMachine.RemoveVirtualMachineFromBackupOffering(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("RemoveVirtualMachineFromBackupOffering", testremoveVirtualMachineFromBackupOffering)
 
 }

@@ -1,0 +1,18 @@
+name: Mold SDK contract
+on:
+  push:
+    branches: [codex/kubernetes-iso-1228]
+    tags: ['v*-mold*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
+        with:
+          go-version: '1.26.8'
+          cache: true
+      - run: go test -race ./cloudstack ./test ./examples

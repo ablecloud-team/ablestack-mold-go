@@ -160,7 +160,7 @@ func (s *BrocadeVCSService) NewAddBrocadeVcsDeviceParams(hostname string, passwo
 
 // Adds a Brocade VCS Switch
 func (s *BrocadeVCSService) AddBrocadeVcsDevice(p *AddBrocadeVcsDeviceParams) (*AddBrocadeVcsDeviceResponse, error) {
-	resp, err := s.cs.newRequest("addBrocadeVcsDevice", p.toURLValues())
+	resp, err := s.cs.newPostRequest("addBrocadeVcsDevice", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +250,7 @@ func (s *BrocadeVCSService) NewDeleteBrocadeVcsDeviceParams(vcsdeviceid string) 
 
 // delete a Brocade VCS Switch
 func (s *BrocadeVCSService) DeleteBrocadeVcsDevice(p *DeleteBrocadeVcsDeviceParams) (*DeleteBrocadeVcsDeviceResponse, error) {
-	resp, err := s.cs.newRequest("deleteBrocadeVcsDevice", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteBrocadeVcsDevice", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -441,7 +441,7 @@ func (s *BrocadeVCSService) GetBrocadeVcsDeviceNetworkID(keyword string, vcsdevi
 	return "", l.Count, fmt.Errorf("Could not find an exact match for %s: %+v", keyword, l)
 }
 
-// lists network that are using a brocade vcs switch
+// Lists network that are using a brocade vcs switch
 func (s *BrocadeVCSService) ListBrocadeVcsDeviceNetworks(p *ListBrocadeVcsDeviceNetworksParams) (*ListBrocadeVcsDeviceNetworksResponse, error) {
 	resp, err := s.cs.newRequest("listBrocadeVcsDeviceNetworks", p.toURLValues())
 	if err != nil {
@@ -466,8 +466,11 @@ type BrocadeVcsDeviceNetwork struct {
 	Aclid                       string                           `json:"aclid"`
 	Aclname                     string                           `json:"aclname"`
 	Acltype                     string                           `json:"acltype"`
+	Asnumber                    int64                            `json:"asnumber"`
+	Asnumberid                  string                           `json:"asnumberid"`
 	Associatednetwork           string                           `json:"associatednetwork"`
 	Associatednetworkid         string                           `json:"associatednetworkid"`
+	Bgppeers                    []interface{}                    `json:"bgppeers"`
 	Broadcastdomaintype         string                           `json:"broadcastdomaintype"`
 	Broadcasturi                string                           `json:"broadcasturi"`
 	Canusefordeploy             bool                             `json:"canusefordeploy"`
@@ -488,6 +491,8 @@ type BrocadeVcsDeviceNetwork struct {
 	Icon                        interface{}                      `json:"icon"`
 	Id                          string                           `json:"id"`
 	Internetprotocol            string                           `json:"internetprotocol"`
+	Ip4routes                   []interface{}                    `json:"ip4routes"`
+	Ip4routing                  string                           `json:"ip4routing"`
 	Ip6cidr                     string                           `json:"ip6cidr"`
 	Ip6dns1                     string                           `json:"ip6dns1"`
 	Ip6dns2                     string                           `json:"ip6dns2"`
@@ -521,6 +526,7 @@ type BrocadeVcsDeviceNetwork struct {
 	Sentbytes                   int64                            `json:"sentbytes"`
 	Service                     []BrocadeVcsDeviceNetworkService `json:"service"`
 	Specifyipranges             bool                             `json:"specifyipranges"`
+	Specifyvlan                 bool                             `json:"specifyvlan"`
 	State                       string                           `json:"state"`
 	Strechedl2subnet            bool                             `json:"strechedl2subnet"`
 	Subdomainaccess             bool                             `json:"subdomainaccess"`

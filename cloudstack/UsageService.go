@@ -36,7 +36,7 @@ type UsageServiceIface interface {
 	DeleteTrafficType(p *DeleteTrafficTypeParams) (*DeleteTrafficTypeResponse, error)
 	NewDeleteTrafficTypeParams(id string) *DeleteTrafficTypeParams
 	GenerateUsageRecords(p *GenerateUsageRecordsParams) (*GenerateUsageRecordsResponse, error)
-	NewGenerateUsageRecordsParams(enddate string, startdate string) *GenerateUsageRecordsParams
+	NewGenerateUsageRecordsParams() *GenerateUsageRecordsParams
 	ListTrafficMonitors(p *ListTrafficMonitorsParams) (*ListTrafficMonitorsResponse, error)
 	NewListTrafficMonitorsParams(zoneid string) *ListTrafficMonitorsParams
 	ListTrafficTypeImplementors(p *ListTrafficTypeImplementorsParams) (*ListTrafficTypeImplementorsResponse, error)
@@ -176,7 +176,7 @@ func (s *UsageService) NewAddTrafficMonitorParams(url string, zoneid string) *Ad
 
 // Adds Traffic Monitor Host for Direct Network Usage
 func (s *UsageService) AddTrafficMonitor(p *AddTrafficMonitorParams) (*AddTrafficMonitorResponse, error) {
-	resp, err := s.cs.newRequest("addTrafficMonitor", p.toURLValues())
+	resp, err := s.cs.newPostRequest("addTrafficMonitor", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -439,7 +439,7 @@ func (s *UsageService) NewAddTrafficTypeParams(physicalnetworkid string, traffic
 
 // Adds traffic type to a physical network
 func (s *UsageService) AddTrafficType(p *AddTrafficTypeParams) (*AddTrafficTypeResponse, error) {
-	resp, err := s.cs.newRequest("addTrafficType", p.toURLValues())
+	resp, err := s.cs.newPostRequest("addTrafficType", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +532,7 @@ func (s *UsageService) NewDeleteTrafficMonitorParams(id string) *DeleteTrafficMo
 
 // Deletes an traffic monitor host.
 func (s *UsageService) DeleteTrafficMonitor(p *DeleteTrafficMonitorParams) (*DeleteTrafficMonitorResponse, error) {
-	resp, err := s.cs.newRequest("deleteTrafficMonitor", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteTrafficMonitor", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -626,7 +626,7 @@ func (s *UsageService) NewDeleteTrafficTypeParams(id string) *DeleteTrafficTypeP
 
 // Deletes traffic type of a physical network
 func (s *UsageService) DeleteTrafficType(p *DeleteTrafficTypeParams) (*DeleteTrafficTypeResponse, error) {
-	resp, err := s.cs.newRequest("deleteTrafficType", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteTrafficType", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -747,17 +747,15 @@ func (p *GenerateUsageRecordsParams) GetStartdate() (string, bool) {
 
 // You should always use this function to get a new GenerateUsageRecordsParams instance,
 // as then you are sure you have configured all required params
-func (s *UsageService) NewGenerateUsageRecordsParams(enddate string, startdate string) *GenerateUsageRecordsParams {
+func (s *UsageService) NewGenerateUsageRecordsParams() *GenerateUsageRecordsParams {
 	p := &GenerateUsageRecordsParams{}
 	p.p = make(map[string]interface{})
-	p.p["enddate"] = enddate
-	p.p["startdate"] = startdate
 	return p
 }
 
 // Generates usage records. This will generate records only if there any records to be generated, i.e if the scheduled usage job was not run or failed
 func (s *UsageService) GenerateUsageRecords(p *GenerateUsageRecordsParams) (*GenerateUsageRecordsResponse, error) {
-	resp, err := s.cs.newRequest("generateUsageRecords", p.toURLValues())
+	resp, err := s.cs.newPostRequest("generateUsageRecords", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1088,7 +1086,7 @@ func (s *UsageService) ListTrafficTypeImplementors(p *ListTrafficTypeImplementor
 
 type ListTrafficTypeImplementorsResponse struct {
 	Count                   int                       `json:"count"`
-	TrafficTypeImplementors []*TrafficTypeImplementor `json:"traffictypeimplementor"`
+	TrafficTypeImplementors []*TrafficTypeImplementor `json:"traffictypeimplementorresponse"`
 }
 
 type TrafficTypeImplementor struct {
@@ -1678,6 +1676,7 @@ type UsageRecord struct {
 	Description      string `json:"description"`
 	Domain           string `json:"domain"`
 	Domainid         string `json:"domainid"`
+	Domainpath       string `json:"domainpath"`
 	Enddate          string `json:"enddate"`
 	Hasannotations   bool   `json:"hasannotations"`
 	Isdefault        bool   `json:"isdefault"`
@@ -1779,9 +1778,10 @@ type ListUsageTypesResponse struct {
 
 type UsageType struct {
 	Description string `json:"description"`
+	Id          int    `json:"id"`
 	JobID       string `json:"jobid"`
 	Jobstatus   int    `json:"jobstatus"`
-	Usagetypeid int    `json:"usagetypeid"`
+	Name        string `json:"name"`
 }
 
 type RemoveRawUsageRecordsParams struct {
@@ -1832,7 +1832,7 @@ func (s *UsageService) NewRemoveRawUsageRecordsParams(interval int) *RemoveRawUs
 
 // Safely removes raw records from cloud_usage table
 func (s *UsageService) RemoveRawUsageRecords(p *RemoveRawUsageRecordsParams) (*RemoveRawUsageRecordsResponse, error) {
-	resp, err := s.cs.newRequest("removeRawUsageRecords", p.toURLValues())
+	resp, err := s.cs.newPostRequest("removeRawUsageRecords", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -2046,7 +2046,7 @@ func (s *UsageService) NewUpdateTrafficTypeParams(id string) *UpdateTrafficTypeP
 
 // Updates traffic type of a physical network
 func (s *UsageService) UpdateTrafficType(p *UpdateTrafficTypeParams) (*UpdateTrafficTypeResponse, error) {
-	resp, err := s.cs.newRequest("updateTrafficType", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateTrafficType", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -2128,8 +2128,7 @@ func (s *UsageService) ListUsageServerMetrics(p *ListUsageServerMetricsParams) (
 }
 
 type ListUsageServerMetricsResponse struct {
-	Count              int                  `json:"count"`
-	UsageServerMetrics []*UsageServerMetric `json:"usageservermetric"`
+	UsageServerMetrics *UsageServerMetric `json:"usageMetrics"`
 }
 
 type UsageServerMetric struct {

@@ -30,6 +30,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 	"unicode"
@@ -47,15 +48,30 @@ var detailsRequireKeyValue = map[string]bool{
 	"updateCloudToUseObjectStore": true,
 	"updateGuestOs":               true,
 	"updateZone":                  true,
+	"addObjectStoragePool":        true,
 }
 
 // detailsRequireZeroIndex is a prefilled map with a list of details
 // that need to be encoded using zero indexing
 var detailsRequireZeroIndex = map[string]bool{
-	"registerTemplate": true,
-	"updateTemplate":   true,
-	"createAccount":    true,
-	"updateAccount":    true,
+	"registerTemplate":     true,
+	"updateTemplate":       true,
+	"createAccount":        true,
+	"updateAccount":        true,
+	"updateVirtualMachine": true,
+	"importVm":             true,
+}
+
+// parametersRequireIndexing contains map parameters that always need
+// index variables (i) even when the command uses zero indexing
+var parametersRequireIndexing = map[string]bool{
+	"userdatadetails":       true,
+	"serviceproviderlist":   true,
+	"usersecuritygrouplist": true,
+	"tags":                  true,
+	"nicnetworklist":        true,
+	"nicipaddresslist":      true,
+	"datadiskofferinglist":  true,
 }
 
 // requiresPost is a prefilled set of API names that require POST
@@ -70,6 +86,7 @@ var requiresPostMethod = map[string]bool{
 	"registerUserData":                 true,
 	"setupUserTwoFactorAuthentication": true,
 	"validateUserTwoFactorAuthenticationCode": true,
+	"quotaTariffCreate":                       true,
 }
 
 var mapRequireList = map[string]map[string]bool{
@@ -77,6 +94,25 @@ var mapRequireList = map[string]map[string]bool{
 		"dhcpoptionsnetworklist": true,
 		"iptonetworklist":        true,
 		"nicnetworklist":         true,
+		"datadisksdetails":       true,
+	},
+	"deployVnfAppliance": map[string]bool{
+		"dhcpoptionsnetworklist": true,
+		"iptonetworklist":        true,
+		"nicnetworklist":         true,
+		"datadisksdetails":       true,
+	},
+	"createVMFromBackup": map[string]bool{
+		"dhcpoptionsnetworklist": true,
+		"iptonetworklist":        true,
+		"nicnetworklist":         true,
+		"datadisksdetails":       true,
+	},
+	"createVPCOffering": map[string]bool{
+		"servicecapabilitylist": true,
+	},
+	"createNetworkOffering": map[string]bool{
+		"servicecapabilitylist": true,
 	},
 	"updateVirtualMachine": map[string]bool{
 		"dhcpoptionsnetworklist": true,
@@ -84,20 +120,49 @@ var mapRequireList = map[string]map[string]bool{
 	"migrateVirtualMachineWithVolume": map[string]bool{
 		"migrateto": true,
 	},
+	"importVm": map[string]bool{
+		"networklist":          true,
+		"nicipaddresslist":     true,
+		"datadiskofferinglist": true,
+	},
+	"registerOauthProvider": map[string]bool{
+		"details": true,
+	},
 }
 
 // nestedResponse is a prefilled map with the list of endpoints
 // that responses fields are nested in a parent object. The map value
 // gives the object field name.
 var nestedResponse = map[string]string{
-	"getUploadParamsForTemplate": "getuploadparams",
-	"getUploadParamsForVolume":   "getuploadparams",
-	"createRole":                 "role",
-	"createRolePermission":       "rolepermission",
-	"getCloudIdentifier":         "cloudidentifier",
-	"getKubernetesClusterConfig": "clusterconfig",
-	"getPathForVolume":           "apipathforvolume",
-	"createConsoleEndpoint":      "consoleendpoint",
+	"getUploadParamsForTemplate":                   "getuploadparams",
+	"getUploadParamsForVolume":                     "getuploadparams",
+	"createRole":                                   "role",
+	"createRolePermission":                         "rolepermission",
+	"getCloudIdentifier":                           "cloudidentifier",
+	"getKubernetesClusterConfig":                   "clusterconfig",
+	"getPathForVolume":                             "apipathforvolume",
+	"createConsoleEndpoint":                        "consoleendpoint",
+	"addVmwareDc":                                  "vmwaredc",
+	"updateVmwareDc":                               "vmwaredc",
+	"createProjectRole":                            "projectrole",
+	"updateProjectRole":                            "projectrole",
+	"registerUserData":                             "userdata",
+	"updateSecurityGroup":                          "securitygroup",
+	"updateOauthProvider":                          "oauthprovider",
+	"readyForShutdown":                             "readyforshutdown",
+	"updateObjectStoragePool":                      "objectstore",
+	"addObjectStoragePool":                         "objectstore",
+	"updateImageStore":                             "imagestore",
+	"linkUserDataToTemplate":                       "template",
+	"assignVolume":                                 "volume",
+	"createVMSchedule":                             "vmschedule",
+	"updateVMSchedule":                             "vmschedule",
+	"setupUserTwoFactorAuthentication":             "setup2fa",
+	"updateSecondaryStorageSelector":               "heuristics",
+	"createSecondaryStorageSelector":               "heuristics",
+	"getUploadParamsForKubernetesSupportedVersion": "getuploadparams",
+	"addOsCategory":                                "oscategory",
+	"updateOsCategory":                             "oscategory",
 }
 
 // longToStringConvertedParams is a prefilled map with the list of
@@ -112,6 +177,59 @@ var longToStringConvertedParams = map[string]bool{
 // This is to change the struct type name to something other than the API name
 var customResponseStructTypes = map[string]string{
 	"findHostsForMigration": "HostForMigration",
+}
+
+// listResponseKeys records the JSON key CloudStack uses for the items of a list
+// response, for every API where that key differs from the one derived from the
+// API name.
+var listResponseKeys = map[string]string{
+	"listAsyncJobs":                           "asyncjobs",
+	"listDomainChildren":                      "domain",
+	"listEgressFirewallRules":                 "firewallrule",
+	"listGuestNetworkIpv6Prefixes":            "guestnetworkipv6prefix",
+	"listHostHAProviders":                     "haprovider",
+	"listHostHAResources":                     "hostha",
+	"listHypervisorCapabilities":              "hypervisorCapabilities",
+	"listImageStoreObjects":                   "datastoreobject",
+	"listLBHealthCheckPolicies":               "healthcheckpolicies",
+	"listLBStickinessPolicies":                "stickinesspolicies",
+	"listManagementServersMetrics":            "managementserver",
+	"listObjectStoragePools":                  "objectstore",
+	"listSecondaryStorageSelectors":           "heuristics",
+	"listStoragePoolObjects":                  "datastoreobject",
+	"listStoragePoolsMetrics":                 "storagepool",
+	"listVirtualMachinesMetrics":              "virtualmachine",
+	"listVirtualMachinesUsageHistory":         "virtualmachine",
+	"listVmwareDcVms":                         "unmanagedinstance",
+	"listVolumesUsageHistory":                 "volume",
+	"quotaSummary":                            "summary",
+	"quotaTariffList":                         "quotatariff",
+	"registerTemplate":                        "template",
+	"listVnfAppliances":                       "virtualmachine",
+	"listVnfTemplates":                        "template",
+	"listBackupProviders":                     "providers",
+	"listClustersMetrics":                     "cluster",
+	"listCustomActions":                       "extensioncustomaction",
+	"listHostsMetrics":                        "host",
+	"listNetworkIsolationMethods":             "isolationmethod",
+	"listRoutingFirewallRules":                "firewallrule",
+	"listSupportedNetworkServices":            "networkservice",
+	"listSystemVmsUsageHistory":               "virtualmachine",
+	"listTrafficTypeImplementors":             "traffictypeimplementorresponse",
+	"listUserTwoFactorAuthenticatorProviders": "providers",
+	"listVolumesMetrics":                      "volume",
+	"listZonesMetrics":                        "zone",
+	"listASNRanges":                           "asnumberrange",
+	"listIpv4SubnetsForZone":                  "zoneipv4subnet",
+}
+
+// listResponseKey returns the JSON key for an API's list items, preferring an
+// observed key over the one derived from the API name.
+func listResponseKey(apiName, listName string) string {
+	if key, ok := listResponseKeys[apiName]; ok {
+		return key
+	}
+	return strings.ToLower(parseSingular(listName))
 }
 
 // We prefill this one value to make sure it is not
@@ -495,7 +613,9 @@ func (as *allServices) GeneralCode() ([]byte, error) {
 	pn("	currentTime := time.Now().Unix()")
 	pn("")
 	pn("		for {")
-	pn("		p := cs.Asyncjob.NewQueryAsyncJobResultParams(jobid)")
+	pn("		p := &QueryAsyncJobResultParams{}")
+	pn("		p.p = make(map[string]interface{})")
+	pn("		p.SetJobID(jobid)")
 	pn("		r, err := cs.Asyncjob.QueryAsyncJobResult(p)")
 	pn("		if err != nil {")
 	pn("			return nil, err")
@@ -550,6 +670,8 @@ func (as *allServices) GeneralCode() ([]byte, error) {
 	pn("	params.Set(\"apiKey\", cs.apiKey)")
 	pn("	params.Set(\"command\", api)")
 	pn("	params.Set(\"response\", \"json\")")
+	pn("	params.Set(\"signatureversion\", \"3\")")
+	pn("	params.Set(\"expires\", time.Now().UTC().Add(15*time.Minute).Format(time.RFC3339))")
 	pn("")
 	pn("	// Generate signature for API call")
 	pn("	// * Serialize parameters, URL encoding only values and sort them by key, done by EncodeValues")
@@ -656,6 +778,9 @@ func (as *allServices) GeneralCode() ([]byte, error) {
 	pn("			if k != \"count\" {")
 	pn("				if err := json.Unmarshal(v, &resp); err != nil {")
 	pn("					return nil, err")
+	pn("				}")
+	pn("				if len(resp) == 0 {")
+	pn("					return nil, fmt.Errorf(\"Unable to extract raw value: empty array for key %%q in:\\n\\n%%s\\n\\n\", k, string(b))")
 	pn("				}")
 	pn("				return resp[0], nil")
 	pn("			}")
@@ -857,6 +982,9 @@ func (s *service) WriteGeneratedCode() error {
 			return err
 		}
 		testdir, err := testDir()
+		if err != nil {
+			return err
+		}
 		file := path.Join(testdir, s.name+"_test.go")
 		ioutil.WriteFile(file, tests, 0644)
 	}
@@ -1037,7 +1165,7 @@ func (s *service) GenerateCode() ([]byte, error) {
 		pn("}")
 		pn("")
 		pn("func (s *CustomService) CustomRequest(api string, p *CustomServiceParams, result interface{}) error {")
-		pn("	resp, err := s.cs.newRequest(api, p.toURLValues())")
+		pn("	resp, err := s.cs.newPostRequest(api, p.toURLValues())")
 		pn("	if err != nil {")
 		pn("		return err")
 		pn("	}")
@@ -1150,7 +1278,7 @@ func (s *service) generateAPITest(a *API) {
 	}
 	pn(")")
 	idPresent := false
-	if !(strings.HasPrefix(a.Name, "list") || a.Name == "registerTemplate" || a.Name == "findHostsForMigration") {
+	if !(strings.HasPrefix(a.Name, "list") || a.Name == "registerTemplate" || a.Name == "findHostsForMigration" || a.Name == "quotaTariffList") {
 		for _, ap := range a.Response {
 			if ap.Name == "id" && ap.Type == "string" {
 				pn("		r, err := client.%s.%s(p)", strings.TrimSuffix(s.name, "Service"), capitalize(a.Name))
@@ -1258,7 +1386,11 @@ func (s *service) generateInterfaceType() {
 					if parseSingular(ln) == "Template" || parseSingular(ln) == "Iso" {
 						p("zoneid string, ")
 					}
-					pn("opts ...OptionFunc) (*%s, int, error)", parseSingular(ln))
+					if parseSingular(ln) == "CniConfiguration" {
+						pn("opts ...OptionFunc) (*UserData, int, error)")
+					} else {
+						pn("opts ...OptionFunc) (*%s, int, error)", parseSingular(ln))
+					}
 				}
 			}
 
@@ -1274,6 +1406,8 @@ func (s *service) generateInterfaceType() {
 				}
 				if ln == "LoadBalancerRuleInstances" {
 					pn("opts ...OptionFunc) (*VirtualMachine, int, error)")
+				} else if ln == "CniConfiguration" {
+					pn("opts ...OptionFunc) (*UserData, int, error)")
 				} else {
 					pn("opts ...OptionFunc) (*%s, int, error)", parseSingular(ln))
 				}
@@ -1305,13 +1439,18 @@ func (s *service) generateConvertCode(cmd, name, typ string) {
 	pn := s.pn
 
 	switch typ {
-	case "string", "UUID":
+	case "string":
 		pn("u.Set(\"%s\", v.(string))", name)
+	case "UUID":
+		pn("u.Set(\"%s\", string(v.(UUID)))", name)
 	case "int":
 		pn("vv := strconv.Itoa(v.(int))")
 		pn("u.Set(\"%s\", vv)", name)
 	case "int64":
 		pn("vv := strconv.FormatInt(v.(int64), 10)")
+		pn("u.Set(\"%s\", vv)", name)
+	case "float64":
+		pn("vv := strconv.FormatFloat(v.(float64), 'f', -1, 64)")
 		pn("u.Set(\"%s\", vv)", name)
 	case "bool":
 		pn("vv := strconv.FormatBool(v.(bool))")
@@ -1329,7 +1468,11 @@ func (s *service) generateConvertCode(cmd, name, typ string) {
 	case "map[string]string":
 		pn("m := v.(map[string]string)")
 		zeroIndex := detailsRequireZeroIndex[cmd]
-		if zeroIndex {
+		needsIndex := parametersRequireIndexing[name]
+
+		shouldUseStaticZeroIndex := zeroIndex && !needsIndex
+
+		if shouldUseStaticZeroIndex {
 			pn("for _, k := range getSortedKeysFromMap(m) {")
 		} else {
 			pn("for i, k := range getSortedKeysFromMap(m) {")
@@ -1346,6 +1489,8 @@ func (s *service) generateConvertCode(cmd, name, typ string) {
 					pn("	u.Set(fmt.Sprintf(\"%s[%%d].%%s\", i, k), m[k])", name)
 				}
 			}
+		case "userdatadetails":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].%%s\", i, k), m[k])", name)
 		case "serviceproviderlist":
 			pn("	u.Set(fmt.Sprintf(\"%s[%%d].service\", i), k)", name)
 			pn("	u.Set(fmt.Sprintf(\"%s[%%d].provider\", i), m[k])", name)
@@ -1361,8 +1506,33 @@ func (s *service) generateConvertCode(cmd, name, typ string) {
 			} else {
 				pn("	u.Set(fmt.Sprintf(\"%s[%%d].value\", i), m[k])", name)
 			}
+		case "nicnetworklist":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].nic\", i), k)", name)
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].network\", i), m[k])", name)
+		case "nicipaddresslist":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].nic\", i), k)", name)
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].ip4Address\", i), m[k])", name)
+		case "datadiskofferinglist":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].disk\", i), k)", name)
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].diskOffering\", i), m[k])", name)
+		case "otherdeployparams":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].name\", i), k)", name)
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].value\", i), m[k])", name)
+		case "param":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].name\", i), k)", name)
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].value\", i), m[k])", name)
+		case "nodeofferings":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].node\", i), k)", name)
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].offering\", i), m[k])", name)
+		case "nodetemplates":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].node\", i), k)", name)
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].template\", i), m[k])", name)
+		case "cniconfigdetails":
+			pn("	u.Set(fmt.Sprintf(\"%s[%%d].%%s\", i, k), m[k])", name)
+		case "datadisksdetails":
+			pn("    u.Set(fmt.Sprintf(\"%s[%%d].%%s\", i, k), m[k])", name)
 		default:
-			if zeroIndex && !detailsRequireKeyValue[cmd] {
+			if shouldUseStaticZeroIndex && !detailsRequireKeyValue[cmd] {
 				pn("	u.Set(fmt.Sprintf(\"%s[0].%%s\", k), m[k])", name)
 			} else {
 				pn("	u.Set(fmt.Sprintf(\"%s[%%d].key\", i), k)", name)
@@ -1559,7 +1729,11 @@ func (s *service) generateHelperFuncs(a *API) {
 				if parseSingular(ln) == "Template" || parseSingular(ln) == "Iso" {
 					p("zoneid string, ")
 				}
-				pn("opts ...OptionFunc) (*%s, int, error) {", parseSingular(ln))
+				if parseSingular(ln) == "CniConfiguration" {
+					pn("opts ...OptionFunc) (*UserData, int, error) {")
+				} else {
+					pn("opts ...OptionFunc) (*%s, int, error) {", parseSingular(ln))
+				}
 
 				// Generate the function body
 				p("  id, count, err := s.Get%sID(name, ", parseSingular(ln))
@@ -1585,7 +1759,13 @@ func (s *service) generateHelperFuncs(a *API) {
 						p("%s, ", s.parseParamName(ap.Name))
 					}
 				}
-				pn("opts...)")
+				// Constrain the by-ID lookup to the same zone; otherwise a Template/ISO
+				// registered in multiple zones returns multiple rows for one UUID (#87).
+				if parseSingular(ln) == "Template" || parseSingular(ln) == "Iso" {
+					pn("append(opts, WithZone(zoneid))...)")
+				} else {
+					pn("opts...)")
+				}
 				pn("  if err != nil {")
 				pn("    return nil, count, err")
 				pn("  }")
@@ -1608,6 +1788,8 @@ func (s *service) generateHelperFuncs(a *API) {
 			}
 			if ln == "LoadBalancerRuleInstances" {
 				pn("opts ...OptionFunc) (*VirtualMachine, int, error) {")
+			} else if ln == "CniConfiguration" {
+				pn("opts ...OptionFunc) (*UserData, int, error) {")
 			} else {
 				pn("opts ...OptionFunc) (*%s, int, error) {", parseSingular(ln))
 			}
@@ -1719,7 +1901,12 @@ func (s *service) generateNewAPICallFunc(a *API) {
 		pn("		time.Sleep(500 * time.Millisecond)")
 		pn("	}")
 	} else {
-		if requiresPostMethod[a.Name] {
+		isGetRequest, _ := regexp.MatchString("^(get|list|query|find)(\\w+)+$", strings.ToLower(a.Name))
+		getRequestList := map[string]struct{}{"isaccountallowedtocreateofferingswithtags": {}, "readyforshutdown": {}, "cloudianisenabled": {}, "quotabalance": {},
+			"quotasummary": {}, "quotatarifflist": {}, "quotaisenabled": {}, "quotastatement": {}, "verifyoauthcodeandgetuser": {}}
+		_, isInGetRequestList := getRequestList[strings.ToLower(a.Name)]
+
+		if requiresPostMethod[a.Name] || !(isGetRequest || isInGetRequestList) {
 			pn("	resp, err := s.cs.newPostRequest(\"%s\", p.toURLValues())", a.Name)
 		} else {
 			pn("	resp, err := s.cs.newRequest(\"%s\", p.toURLValues())", a.Name)
@@ -1746,11 +1933,13 @@ func (s *service) generateNewAPICallFunc(a *API) {
 		"UpdateCluster",
 		"UpdateVlanIpRange",
 		"CreatePod",
+		"UpdatePod",
 		"CreateSSHKeyPair",
 		"CreateSecurityGroup",
 		"CreateServiceOffering",
 		"CreateUser",
 		"CreateZone",
+		"UpdateZone",
 		"DedicateGuestVlanRange",
 		"EnableUser",
 		"GetVirtualMachineUserData",
@@ -1860,48 +2049,135 @@ func isSuccessOnlyResponse(resp APIResponses) bool {
 func (s *service) generateResponseType(a *API) {
 	pn := s.pn
 	tn := capitalize(strings.TrimPrefix(a.Name, "configure") + "Response")
+
+	// add custom response types for some specific API calls
+	if a.Name == "getUploadParamsForKubernetesSupportedVersion" {
+		pn("type GetUploadParamsForKubernetesSupportedVersionResponse struct {")
+		pn("    Expires   string `json:\"expires\"`")
+		pn("    Id        string `json:\"id\"`")
+		pn("    JobID     string `json:\"jobid\"`")
+		pn("    Jobstatus int    `json:\"jobstatus\"`")
+		pn("    Metadata  string `json:\"metadata\"`")
+		pn("    PostURL   string `json:\"postURL\"`")
+		pn("    Signature string `json:\"signature\"`")
+		pn("}")
+		pn("")
+		return
+	}
+	if a.Name == "quotaBalance" {
+		pn("type QuotaBalanceResponse struct {")
+		pn("    Statement QuotaBalanceResponseType `json:\"balance\"`")
+		pn("}")
+		pn("")
+		pn("type QuotaBalanceResponseType struct {")
+		pn("    StartQuota float64  `json:\"startquota\"`")
+		pn("    Credits    []string `json:\"credits\"`")
+		pn("    StartDate  string   `json:\"startdate\"`")
+		pn("    Currency   string   `json:\"currency\"`")
+		pn("}")
+		pn("")
+		return
+	}
+	if a.Name == "quotaStatement" {
+		pn("type QuotaStatementResponse struct {")
+		pn("    Statement QuotaStatementResponseType `json:\"statement\"`")
+		pn("}")
+		pn("")
+		pn("type QuotaStatementResponseType struct {")
+		pn("    QuotaUsage []QuotaUsage `json:\"quotausage\"`")
+		pn("    TotalQuota float64      `json:\"totalquota\"`")
+		pn("    StartDate  string       `json:\"startdate\"`")
+		pn("    EndDate    string       `json:\"enddate\"`")
+		pn("    Currency   string       `json:\"currency\"`")
+		pn("}")
+		pn("")
+		pn("type QuotaUsage struct {")
+		pn("    Type      int     `json:\"type\"`")
+		pn("    Accountid int     `json:\"accountid\"`")
+		pn("    Domain    int     `json:\"domain\"`")
+		pn("    Name      string  `json:\"name\"`")
+		pn("    Unit      string  `json:\"unit\"`")
+		pn("    Quota     float64 `json:\"quota\"`")
+		pn("}")
+		pn("")
+		return
+	}
+	if a.Name == "listCniConfiguration" {
+		pn("type ListCniConfigurationResponse struct {")
+		pn("    Count            int        `json:\"count\"`")
+		pn("    CniConfiguration []*UserData `json:\"cniconfig\"`")
+		pn("}")
+		pn("")
+		return
+	}
+	if a.Name == "listVnfAppliances" {
+		// The API docs do not describe the shape of the "vnfnics" field, so this
+		// type is hand maintained to mirror org.apache.cloudstack.api.response.VnfNicResponse.
+		pn("type VnfNic struct {")
+		pn("    Deviceid    int64  `json:\"deviceid\"`")
+		pn("    Description string `json:\"description\"`")
+		pn("    Management  bool   `json:\"management\"`")
+		pn("    Name        string `json:\"name\"`")
+		pn("    Networkid   string `json:\"networkid\"`")
+		pn("    Networkname string `json:\"networkname\"`")
+		pn("    Required    bool   `json:\"required\"`")
+		pn("}")
+		pn("")
+	}
+
 	ln := capitalize(strings.TrimPrefix(a.Name, "list"))
 
 	// If this is a 'list' response, we need an separate list struct. There seem to be other
 	// types of responses that also need a separate list struct, so checking on exact matches
 	// for those once.
-	if strings.HasPrefix(a.Name, "list") || a.Name == "registerTemplate" || a.Name == "findHostsForMigration" {
+	if strings.HasPrefix(a.Name, "list") || a.Name == "registerTemplate" || a.Name == "findHostsForMigration" || a.Name == "registerUserData" ||
+		a.Name == "registerCniConfiguration" || a.Name == "quotaBalance" || a.Name == "quotaSummary" || a.Name == "quotaTariffList" {
 		pn("type %s struct {", tn)
 
-		// This nasty check is for some specific response that do not behave consistent
+		// Responses whose *shape* differs: a single object instead of an array,
+		// no count, more than one collection, or a hand-written field list.
+		// Responses that differ only in the item key are handled by the default
+		// arm through listResponseKeys.
 		switch a.Name {
-		case "listAsyncJobs":
-			pn("	Count int `json:\"count\"`")
-			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), "asyncjobs")
 		case "listCapabilities":
 			pn("    %s *%s `json:\"%s\"`", ln, parseSingular(ln), "capability")
-		case "listEgressFirewallRules":
-			pn("	Count int `json:\"count\"`")
-			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), "firewallrule")
+		case "listCaCertificate":
+			// Returns a single object under "cacertificates", with no count.
+			pn("	%s *%s `json:\"%s\"`", ln, parseSingular(ln), "cacertificates")
+		case "listUsageServerMetrics":
+			// Returns a single object under "usageMetrics", with no count.
+			pn("	%s *%s `json:\"%s\"`", ln, parseSingular(ln), "usageMetrics")
 		case "listLoadBalancerRuleInstances":
 			pn("	Count int `json:\"count\"`")
 			pn("	LBRuleVMIDIPs []*%s `json:\"%s\"`", parseSingular(ln), "lbrulevmidip")
 			pn("	LoadBalancerRuleInstances []*VirtualMachine `json:\"%s\"`", strings.ToLower(parseSingular(ln)))
-		case "listVirtualMachinesMetrics":
-			pn("	Count int `json:\"count\"`")
-			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), "virtualmachine")
-		case "listManagementServersMetrics":
-			pn("	Count int `json:\"count\"`")
-			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), "managementserver")
 		case "listDbMetrics":
 			pn("	%s %s `json:\"%s\"`", ln, parseSingular(ln), "dbMetrics")
-		case "registerTemplate":
-			pn("	Count int `json:\"count\"`")
-			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), "template")
-		case "listDomainChildren":
-			pn("	Count int `json:\"count\"`")
-			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), "domain")
 		case "findHostsForMigration":
 			pn(" Count int `json:\"count\"`")
 			pn(" Host []*%s `json:\"%s\"`", customResponseStructTypes[a.Name], "host")
+		case "registerUserData":
+			pn("    Account string `json:\"account\"`")
+			pn("    Accountid string `json:\"accountid\"`")
+			pn("    Domain string `json:\"domain\"`")
+			pn("    Domainid string `json:\"domainid\"`")
+			pn("    Hasannotations bool `json:\"hasannotations\"`")
+			pn("    Id string `json:\"id\"`")
+			pn("    JobID string `json:\"jobid\"`")
+			pn("    Jobstatus int `json:\"jobstatus\"`")
+			pn("    Name string `json:\"name\"`")
+			pn("    Params string `json:\"params\"`")
+			pn("    Userdata string `json:\"userdata\"`")
+		case "registerCniConfiguration":
+			pn("    CniConfiguration *UserData `json:\"cniconfig\"`")
+		case "listInfrastructure":
+			pn("	Count int `json:\"count\"`")
+			pn("	%s *%s `json:\"%s\"`", ln, parseSingular(ln), "infrastructure")
+		case "quotaBalance":
+			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), "balance")
 		default:
 			pn("	Count int `json:\"count\"`")
-			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), strings.ToLower(parseSingular(ln)))
+			pn("	%s []*%s `json:\"%s\"`", ln, parseSingular(ln), listResponseKey(a.Name, ln))
 		}
 		pn("}")
 		pn("")
@@ -1957,8 +2233,19 @@ func (s *service) recusiveGenerateResponseType(aName string, tn string, resp API
 	customMarshal := false
 	found := make(map[string]bool)
 
+	// Only apply custom response type name if the current tn is not already a custom type
 	if val, ok := customResponseStructTypes[aName]; ok {
-		tn = val
+		// Don't override if tn is already a custom-generated nested type (contains the custom name)
+		isNestedType := false
+		for _, customType := range customResponseStructTypes {
+			if strings.Contains(tn, customType) && tn != customType {
+				isNestedType = true
+				break
+			}
+		}
+		if !isNestedType {
+			tn = val
+		}
 	}
 
 	pn("type %s struct {", tn)
@@ -2047,7 +2334,7 @@ func logMissingApis(ai map[string]*API, as *allServices) {
 	for apiName, _ := range ai {
 		_, found := asMap[apiName]
 		if !found {
-			log.Printf("Api missing in layout: %s", apiName)
+			log.Printf("API missing in layout: %s", apiName)
 		}
 	}
 }
@@ -2153,6 +2440,10 @@ func mapType(aName string, pName string, pType string) string {
 		pType = "UUID"
 	}
 
+	if pName == "counter" {
+		return "*Counter"
+	}
+
 	switch pType {
 	case "UUID":
 		return "UUID"
@@ -2162,7 +2453,7 @@ func mapType(aName string, pName string, pType string) string {
 		return "int"
 	case "long":
 		return "int64"
-	case "float", "double":
+	case "float", "double", "bigdecimal":
 		return "float64"
 	case "list":
 		if pName == "downloaddetails" || pName == "owner" {
@@ -2172,6 +2463,15 @@ func mapType(aName string, pName string, pType string) string {
 		}
 		if pName == "virtualmachines" {
 			return "[]*VirtualMachine"
+		}
+		if pName == "conditions" {
+			return "[]*Condition"
+		}
+		if pName == "scaledownpolicies" || pName == "scaleuppolicies" {
+			return "[]*AutoScalePolicy"
+		}
+		if pName == "vnfnics" {
+			return "[]*VnfNic"
 		}
 		return "[]string"
 	case "map":

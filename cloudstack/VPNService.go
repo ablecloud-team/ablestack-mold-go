@@ -219,7 +219,7 @@ func (s *VPNService) NewAddVpnUserParams(password string, username string) *AddV
 	return p
 }
 
-// Adds vpn users
+// Adds VPN Users
 func (s *VPNService) AddVpnUser(p *AddVpnUserParams) (*AddVpnUserResponse, error) {
 	resp, err := s.cs.newPostRequest("addVpnUser", p.toURLValues())
 	if err != nil {
@@ -255,16 +255,17 @@ func (s *VPNService) AddVpnUser(p *AddVpnUserParams) (*AddVpnUserResponse, error
 }
 
 type AddVpnUserResponse struct {
-	Account   string `json:"account"`
-	Domain    string `json:"domain"`
-	Domainid  string `json:"domainid"`
-	Id        string `json:"id"`
-	JobID     string `json:"jobid"`
-	Jobstatus int    `json:"jobstatus"`
-	Project   string `json:"project"`
-	Projectid string `json:"projectid"`
-	State     string `json:"state"`
-	Username  string `json:"username"`
+	Account    string `json:"account"`
+	Domain     string `json:"domain"`
+	Domainid   string `json:"domainid"`
+	Domainpath string `json:"domainpath"`
+	Id         string `json:"id"`
+	JobID      string `json:"jobid"`
+	Jobstatus  int    `json:"jobstatus"`
+	Project    string `json:"project"`
+	Projectid  string `json:"projectid"`
+	State      string `json:"state"`
+	Username   string `json:"username"`
 }
 
 type CreateRemoteAccessVpnParams struct {
@@ -434,9 +435,9 @@ func (s *VPNService) NewCreateRemoteAccessVpnParams(publicipid string) *CreateRe
 	return p
 }
 
-// Creates a l2tp/ipsec remote access vpn
+// Creates a l2tp/ipsec remote access VPN
 func (s *VPNService) CreateRemoteAccessVpn(p *CreateRemoteAccessVpnParams) (*CreateRemoteAccessVpnResponse, error) {
-	resp, err := s.cs.newRequest("createRemoteAccessVpn", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createRemoteAccessVpn", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -473,6 +474,7 @@ type CreateRemoteAccessVpnResponse struct {
 	Account      string `json:"account"`
 	Domain       string `json:"domain"`
 	Domainid     string `json:"domainid"`
+	Domainpath   string `json:"domainpath"`
 	Fordisplay   bool   `json:"fordisplay"`
 	Id           string `json:"id"`
 	Iprange      string `json:"iprange"`
@@ -606,9 +608,9 @@ func (s *VPNService) NewCreateVpnConnectionParams(s2scustomergatewayid string, s
 	return p
 }
 
-// Create site to site vpn connection
+// Create site to site VPN connection
 func (s *VPNService) CreateVpnConnection(p *CreateVpnConnectionParams) (*CreateVpnConnectionResponse, error) {
-	resp, err := s.cs.newRequest("createVpnConnection", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createVpnConnection", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -647,6 +649,7 @@ type CreateVpnConnectionResponse struct {
 	Created              string `json:"created"`
 	Domain               string `json:"domain"`
 	Domainid             string `json:"domainid"`
+	Domainpath           string `json:"domainpath"`
 	Dpd                  bool   `json:"dpd"`
 	Esplifetime          int64  `json:"esplifetime"`
 	Esppolicy            string `json:"esppolicy"`
@@ -1061,9 +1064,9 @@ func (s *VPNService) NewCreateVpnCustomerGatewayParams(cidrlist string, esppolic
 	return p
 }
 
-// Creates site to site vpn customer gateway
+// Creates site to site VPN customer gateway
 func (s *VPNService) CreateVpnCustomerGateway(p *CreateVpnCustomerGatewayParams) (*CreateVpnCustomerGatewayResponse, error) {
-	resp, err := s.cs.newRequest("createVpnCustomerGateway", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createVpnCustomerGateway", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1101,6 +1104,7 @@ type CreateVpnCustomerGatewayResponse struct {
 	Cidrlist         string `json:"cidrlist"`
 	Domain           string `json:"domain"`
 	Domainid         string `json:"domainid"`
+	Domainpath       string `json:"domainpath"`
 	Dpd              bool   `json:"dpd"`
 	Esplifetime      int64  `json:"esplifetime"`
 	Esppolicy        string `json:"esppolicy"`
@@ -1135,6 +1139,9 @@ func (p *CreateVpnGatewayParams) toURLValues() url.Values {
 		vv := strconv.FormatBool(v.(bool))
 		u.Set("fordisplay", vv)
 	}
+	if v, found := p.p["ipaddressid"]; found {
+		u.Set("ipaddressid", v.(string))
+	}
 	if v, found := p.p["vpcid"]; found {
 		u.Set("vpcid", v.(string))
 	}
@@ -1159,6 +1166,27 @@ func (p *CreateVpnGatewayParams) GetFordisplay() (bool, bool) {
 		p.p = make(map[string]interface{})
 	}
 	value, ok := p.p["fordisplay"].(bool)
+	return value, ok
+}
+
+func (p *CreateVpnGatewayParams) SetIpaddressid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["ipaddressid"] = v
+}
+
+func (p *CreateVpnGatewayParams) ResetIpaddressid() {
+	if p.p != nil && p.p["ipaddressid"] != nil {
+		delete(p.p, "ipaddressid")
+	}
+}
+
+func (p *CreateVpnGatewayParams) GetIpaddressid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["ipaddressid"].(string)
 	return value, ok
 }
 
@@ -1192,9 +1220,9 @@ func (s *VPNService) NewCreateVpnGatewayParams(vpcid string) *CreateVpnGatewayPa
 	return p
 }
 
-// Creates site to site vpn local gateway
+// Creates site to site VPN local gateway
 func (s *VPNService) CreateVpnGateway(p *CreateVpnGatewayParams) (*CreateVpnGatewayResponse, error) {
-	resp, err := s.cs.newRequest("createVpnGateway", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createVpnGateway", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1231,6 +1259,7 @@ type CreateVpnGatewayResponse struct {
 	Account    string `json:"account"`
 	Domain     string `json:"domain"`
 	Domainid   string `json:"domainid"`
+	Domainpath string `json:"domainpath"`
 	Fordisplay bool   `json:"fordisplay"`
 	Id         string `json:"id"`
 	JobID      string `json:"jobid"`
@@ -1288,9 +1317,9 @@ func (s *VPNService) NewDeleteRemoteAccessVpnParams(publicipid string) *DeleteRe
 	return p
 }
 
-// Destroys a l2tp/ipsec remote access vpn
+// Destroys a l2tp/ipsec remote access VPN
 func (s *VPNService) DeleteRemoteAccessVpn(p *DeleteRemoteAccessVpnParams) (*DeleteRemoteAccessVpnResponse, error) {
-	resp, err := s.cs.newRequest("deleteRemoteAccessVpn", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteRemoteAccessVpn", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1370,9 +1399,9 @@ func (s *VPNService) NewDeleteVpnConnectionParams(id string) *DeleteVpnConnectio
 	return p
 }
 
-// Delete site to site vpn connection
+// Delete site to site VPN connection
 func (s *VPNService) DeleteVpnConnection(p *DeleteVpnConnectionParams) (*DeleteVpnConnectionResponse, error) {
-	resp, err := s.cs.newRequest("deleteVpnConnection", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteVpnConnection", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1452,9 +1481,9 @@ func (s *VPNService) NewDeleteVpnCustomerGatewayParams(id string) *DeleteVpnCust
 	return p
 }
 
-// Delete site to site vpn customer gateway
+// Delete site to site VPN customer gateway
 func (s *VPNService) DeleteVpnCustomerGateway(p *DeleteVpnCustomerGatewayParams) (*DeleteVpnCustomerGatewayResponse, error) {
-	resp, err := s.cs.newRequest("deleteVpnCustomerGateway", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteVpnCustomerGateway", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1534,9 +1563,9 @@ func (s *VPNService) NewDeleteVpnGatewayParams(id string) *DeleteVpnGatewayParam
 	return p
 }
 
-// Delete site to site vpn gateway
+// Delete site to site VPN gateway
 func (s *VPNService) DeleteVpnGateway(p *DeleteVpnGatewayParams) (*DeleteVpnGatewayResponse, error) {
-	resp, err := s.cs.newRequest("deleteVpnGateway", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteVpnGateway", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1917,7 +1946,7 @@ func (s *VPNService) GetRemoteAccessVpnByID(id string, opts ...OptionFunc) (*Rem
 	return nil, l.Count, fmt.Errorf("There is more then one result for RemoteAccessVpn UUID: %s!", id)
 }
 
-// Lists remote access vpns
+// Lists remote access VPNs
 func (s *VPNService) ListRemoteAccessVpns(p *ListRemoteAccessVpnsParams) (*ListRemoteAccessVpnsResponse, error) {
 	resp, err := s.cs.newRequest("listRemoteAccessVpns", p.toURLValues())
 	if err != nil {
@@ -1941,6 +1970,7 @@ type RemoteAccessVpn struct {
 	Account      string `json:"account"`
 	Domain       string `json:"domain"`
 	Domainid     string `json:"domainid"`
+	Domainpath   string `json:"domainpath"`
 	Fordisplay   bool   `json:"fordisplay"`
 	Id           string `json:"id"`
 	Iprange      string `json:"iprange"`
@@ -2276,7 +2306,7 @@ func (s *VPNService) GetVpnConnectionByID(id string, opts ...OptionFunc) (*VpnCo
 	return nil, l.Count, fmt.Errorf("There is more then one result for VpnConnection UUID: %s!", id)
 }
 
-// Lists site to site vpn connection gateways
+// Lists site to site VPN connection gateways
 func (s *VPNService) ListVpnConnections(p *ListVpnConnectionsParams) (*ListVpnConnectionsResponse, error) {
 	resp, err := s.cs.newRequest("listVpnConnections", p.toURLValues())
 	if err != nil {
@@ -2302,6 +2332,7 @@ type VpnConnection struct {
 	Created              string `json:"created"`
 	Domain               string `json:"domain"`
 	Domainid             string `json:"domainid"`
+	Domainpath           string `json:"domainpath"`
 	Dpd                  bool   `json:"dpd"`
 	Esplifetime          int64  `json:"esplifetime"`
 	Esppolicy            string `json:"esppolicy"`
@@ -2649,7 +2680,7 @@ func (s *VPNService) GetVpnCustomerGatewayByID(id string, opts ...OptionFunc) (*
 	return nil, l.Count, fmt.Errorf("There is more then one result for VpnCustomerGateway UUID: %s!", id)
 }
 
-// Lists site to site vpn customer gateways
+// Lists site to site VPN customer gateways
 func (s *VPNService) ListVpnCustomerGateways(p *ListVpnCustomerGatewaysParams) (*ListVpnCustomerGatewaysResponse, error) {
 	resp, err := s.cs.newRequest("listVpnCustomerGateways", p.toURLValues())
 	if err != nil {
@@ -2674,6 +2705,7 @@ type VpnCustomerGateway struct {
 	Cidrlist         string `json:"cidrlist"`
 	Domain           string `json:"domain"`
 	Domainid         string `json:"domainid"`
+	Domainpath       string `json:"domainpath"`
 	Dpd              bool   `json:"dpd"`
 	Esplifetime      int64  `json:"esplifetime"`
 	Esppolicy        string `json:"esppolicy"`
@@ -3017,7 +3049,7 @@ func (s *VPNService) GetVpnGatewayByID(id string, opts ...OptionFunc) (*VpnGatew
 	return nil, l.Count, fmt.Errorf("There is more then one result for VpnGateway UUID: %s!", id)
 }
 
-// Lists site 2 site vpn gateways
+// Lists site 2 site VPN gateways
 func (s *VPNService) ListVpnGateways(p *ListVpnGatewaysParams) (*ListVpnGatewaysResponse, error) {
 	resp, err := s.cs.newRequest("listVpnGateways", p.toURLValues())
 	if err != nil {
@@ -3041,6 +3073,7 @@ type VpnGateway struct {
 	Account    string `json:"account"`
 	Domain     string `json:"domain"`
 	Domainid   string `json:"domainid"`
+	Domainpath string `json:"domainpath"`
 	Fordisplay bool   `json:"fordisplay"`
 	Id         string `json:"id"`
 	JobID      string `json:"jobid"`
@@ -3350,7 +3383,7 @@ func (s *VPNService) GetVpnUserByID(id string, opts ...OptionFunc) (*VpnUser, in
 	return nil, l.Count, fmt.Errorf("There is more then one result for VpnUser UUID: %s!", id)
 }
 
-// Lists vpn users
+// Lists VPN Users
 func (s *VPNService) ListVpnUsers(p *ListVpnUsersParams) (*ListVpnUsersResponse, error) {
 	resp, err := s.cs.newRequest("listVpnUsers", p.toURLValues())
 	if err != nil {
@@ -3371,16 +3404,17 @@ type ListVpnUsersResponse struct {
 }
 
 type VpnUser struct {
-	Account   string `json:"account"`
-	Domain    string `json:"domain"`
-	Domainid  string `json:"domainid"`
-	Id        string `json:"id"`
-	JobID     string `json:"jobid"`
-	Jobstatus int    `json:"jobstatus"`
-	Project   string `json:"project"`
-	Projectid string `json:"projectid"`
-	State     string `json:"state"`
-	Username  string `json:"username"`
+	Account    string `json:"account"`
+	Domain     string `json:"domain"`
+	Domainid   string `json:"domainid"`
+	Domainpath string `json:"domainpath"`
+	Id         string `json:"id"`
+	JobID      string `json:"jobid"`
+	Jobstatus  int    `json:"jobstatus"`
+	Project    string `json:"project"`
+	Projectid  string `json:"projectid"`
+	State      string `json:"state"`
+	Username   string `json:"username"`
 }
 
 type RemoveVpnUserParams struct {
@@ -3500,9 +3534,9 @@ func (s *VPNService) NewRemoveVpnUserParams(username string) *RemoveVpnUserParam
 	return p
 }
 
-// Removes vpn user
+// Removes VPN User
 func (s *VPNService) RemoveVpnUser(p *RemoveVpnUserParams) (*RemoveVpnUserResponse, error) {
-	resp, err := s.cs.newRequest("removeVpnUser", p.toURLValues())
+	resp, err := s.cs.newPostRequest("removeVpnUser", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -3630,9 +3664,9 @@ func (s *VPNService) NewResetVpnConnectionParams(id string) *ResetVpnConnectionP
 	return p
 }
 
-// Reset site to site vpn connection
+// Reset site to site VPN connection
 func (s *VPNService) ResetVpnConnection(p *ResetVpnConnectionParams) (*ResetVpnConnectionResponse, error) {
-	resp, err := s.cs.newRequest("resetVpnConnection", p.toURLValues())
+	resp, err := s.cs.newPostRequest("resetVpnConnection", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -3671,6 +3705,7 @@ type ResetVpnConnectionResponse struct {
 	Created              string `json:"created"`
 	Domain               string `json:"domain"`
 	Domainid             string `json:"domainid"`
+	Domainpath           string `json:"domainpath"`
 	Dpd                  bool   `json:"dpd"`
 	Esplifetime          int64  `json:"esplifetime"`
 	Esppolicy            string `json:"esppolicy"`
@@ -3789,9 +3824,9 @@ func (s *VPNService) NewUpdateRemoteAccessVpnParams(id string) *UpdateRemoteAcce
 	return p
 }
 
-// Updates remote access vpn
+// Updates remote access VPN
 func (s *VPNService) UpdateRemoteAccessVpn(p *UpdateRemoteAccessVpnParams) (*UpdateRemoteAccessVpnResponse, error) {
-	resp, err := s.cs.newRequest("updateRemoteAccessVpn", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateRemoteAccessVpn", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -3828,6 +3863,7 @@ type UpdateRemoteAccessVpnResponse struct {
 	Account      string `json:"account"`
 	Domain       string `json:"domain"`
 	Domainid     string `json:"domainid"`
+	Domainpath   string `json:"domainpath"`
 	Fordisplay   bool   `json:"fordisplay"`
 	Id           string `json:"id"`
 	Iprange      string `json:"iprange"`
@@ -3935,9 +3971,9 @@ func (s *VPNService) NewUpdateVpnConnectionParams(id string) *UpdateVpnConnectio
 	return p
 }
 
-// Updates site to site vpn connection
+// Updates site to site VPN connection
 func (s *VPNService) UpdateVpnConnection(p *UpdateVpnConnectionParams) (*UpdateVpnConnectionResponse, error) {
-	resp, err := s.cs.newRequest("updateVpnConnection", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateVpnConnection", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -3976,6 +4012,7 @@ type UpdateVpnConnectionResponse struct {
 	Created              string `json:"created"`
 	Domain               string `json:"domain"`
 	Domainid             string `json:"domainid"`
+	Domainpath           string `json:"domainpath"`
 	Dpd                  bool   `json:"dpd"`
 	Esplifetime          int64  `json:"esplifetime"`
 	Esppolicy            string `json:"esppolicy"`
@@ -4391,9 +4428,9 @@ func (s *VPNService) NewUpdateVpnCustomerGatewayParams(cidrlist string, esppolic
 	return p
 }
 
-// Update site to site vpn customer gateway
+// Update site to site VPN customer gateway
 func (s *VPNService) UpdateVpnCustomerGateway(p *UpdateVpnCustomerGatewayParams) (*UpdateVpnCustomerGatewayResponse, error) {
-	resp, err := s.cs.newRequest("updateVpnCustomerGateway", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateVpnCustomerGateway", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -4431,6 +4468,7 @@ type UpdateVpnCustomerGatewayResponse struct {
 	Cidrlist         string `json:"cidrlist"`
 	Domain           string `json:"domain"`
 	Domainid         string `json:"domainid"`
+	Domainpath       string `json:"domainpath"`
 	Dpd              bool   `json:"dpd"`
 	Esplifetime      int64  `json:"esplifetime"`
 	Esppolicy        string `json:"esppolicy"`
@@ -4546,9 +4584,9 @@ func (s *VPNService) NewUpdateVpnGatewayParams(id string) *UpdateVpnGatewayParam
 	return p
 }
 
-// Updates site to site vpn local gateway
+// Updates site to site VPN local gateway
 func (s *VPNService) UpdateVpnGateway(p *UpdateVpnGatewayParams) (*UpdateVpnGatewayResponse, error) {
-	resp, err := s.cs.newRequest("updateVpnGateway", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateVpnGateway", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -4585,6 +4623,7 @@ type UpdateVpnGatewayResponse struct {
 	Account    string `json:"account"`
 	Domain     string `json:"domain"`
 	Domainid   string `json:"domainid"`
+	Domainpath string `json:"domainpath"`
 	Fordisplay bool   `json:"fordisplay"`
 	Id         string `json:"id"`
 	JobID      string `json:"jobid"`

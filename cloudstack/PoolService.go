@@ -34,6 +34,8 @@ type PoolServiceIface interface {
 	NewDeleteStoragePoolParams(id string) *DeleteStoragePoolParams
 	FindStoragePoolsForMigration(p *FindStoragePoolsForMigrationParams) (*FindStoragePoolsForMigrationResponse, error)
 	NewFindStoragePoolsForMigrationParams(id string) *FindStoragePoolsForMigrationParams
+	ListElastistorPool(p *ListElastistorPoolParams) (*ListElastistorPoolResponse, error)
+	NewListElastistorPoolParams() *ListElastistorPoolParams
 	ListStoragePools(p *ListStoragePoolsParams) (*ListStoragePoolsResponse, error)
 	NewListStoragePoolsParams() *ListStoragePoolsParams
 	GetStoragePoolID(name string, opts ...OptionFunc) (string, int, error)
@@ -43,6 +45,11 @@ type PoolServiceIface interface {
 	NewSyncStoragePoolParams(id string) *SyncStoragePoolParams
 	UpdateStoragePool(p *UpdateStoragePoolParams) (*UpdateStoragePoolResponse, error)
 	NewUpdateStoragePoolParams(id string) *UpdateStoragePoolParams
+	ConfigureStorageAccess(p *ConfigureStorageAccessParams) (*StorageAccessResponse, error)
+	NewConfigureStorageAccessParams() *ConfigureStorageAccessParams
+	ListStorageAccessGroups(p *ListStorageAccessGroupsParams) (*ListStorageAccessGroupsResponse, error)
+	NewListStorageAccessGroupsParams() *ListStorageAccessGroupsParams
+	GetStorageAccessGroupID(name string, opts ...OptionFunc) (string, int, error)
 }
 
 type CreateStoragePoolParams struct {
@@ -93,6 +100,9 @@ func (p *CreateStoragePoolParams) toURLValues() url.Values {
 	}
 	if v, found := p.p["scope"]; found {
 		u.Set("scope", v.(string))
+	}
+	if v, found := p.p["storageaccessgroups"]; found {
+		u.Set("storageaccessgroups", v.(string))
 	}
 	if v, found := p.p["tags"]; found {
 		u.Set("tags", v.(string))
@@ -337,6 +347,27 @@ func (p *CreateStoragePoolParams) GetScope() (string, bool) {
 	return value, ok
 }
 
+func (p *CreateStoragePoolParams) SetStorageaccessgroups(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["storageaccessgroups"] = v
+}
+
+func (p *CreateStoragePoolParams) ResetStorageaccessgroups() {
+	if p.p != nil && p.p["storageaccessgroups"] != nil {
+		delete(p.p, "storageaccessgroups")
+	}
+}
+
+func (p *CreateStoragePoolParams) GetStorageaccessgroups() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["storageaccessgroups"].(string)
+	return value, ok
+}
+
 func (p *CreateStoragePoolParams) SetTags(v string) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
@@ -413,7 +444,7 @@ func (s *PoolService) NewCreateStoragePoolParams(name string, url string, zoneid
 
 // Creates a storage pool.
 func (s *PoolService) CreateStoragePool(p *CreateStoragePoolParams) (*CreateStoragePoolResponse, error) {
-	resp, err := s.cs.newRequest("createStoragePool", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createStoragePool", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -432,10 +463,12 @@ func (s *PoolService) CreateStoragePool(p *CreateStoragePoolParams) (*CreateStor
 
 type CreateStoragePoolResponse struct {
 	Allocatediops        int64             `json:"allocatediops"`
+	Capacitybytes        int64             `json:"capacitybytes"`
 	Capacityiops         int64             `json:"capacityiops"`
 	Clusterid            string            `json:"clusterid"`
 	Clustername          string            `json:"clustername"`
 	Created              string            `json:"created"`
+	Details              map[string]string `json:"details"`
 	Disksizeallocated    int64             `json:"disksizeallocated"`
 	Disksizetotal        int64             `json:"disksizetotal"`
 	Disksizeused         int64             `json:"disksizeused"`
@@ -446,7 +479,9 @@ type CreateStoragePoolResponse struct {
 	Istagarule           bool              `json:"istagarule"`
 	JobID                string            `json:"jobid"`
 	Jobstatus            int               `json:"jobstatus"`
+	Managed              bool              `json:"managed"`
 	Name                 string            `json:"name"`
+	Nfsmountopts         string            `json:"nfsmountopts"`
 	Overprovisionfactor  string            `json:"overprovisionfactor"`
 	Path                 string            `json:"path"`
 	Podid                string            `json:"podid"`
@@ -454,10 +489,13 @@ type CreateStoragePoolResponse struct {
 	Provider             string            `json:"provider"`
 	Scope                string            `json:"scope"`
 	State                string            `json:"state"`
+	Storageaccessgroups  string            `json:"storageaccessgroups"`
 	Storagecapabilities  map[string]string `json:"storagecapabilities"`
+	Storagecustomstats   map[string]string `json:"storagecustomstats"`
 	Suitableformigration bool              `json:"suitableformigration"`
 	Tags                 string            `json:"tags"`
 	Type                 string            `json:"type"`
+	Usediops             int64             `json:"usediops"`
 	Zoneid               string            `json:"zoneid"`
 	Zonename             string            `json:"zonename"`
 }
@@ -534,7 +572,7 @@ func (s *PoolService) NewDeleteStoragePoolParams(id string) *DeleteStoragePoolPa
 
 // Deletes a storage pool.
 func (s *PoolService) DeleteStoragePool(p *DeleteStoragePoolParams) (*DeleteStoragePoolResponse, error) {
-	resp, err := s.cs.newRequest("deleteStoragePool", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteStoragePool", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -717,10 +755,12 @@ func (s *PoolService) FindStoragePoolsForMigration(p *FindStoragePoolsForMigrati
 
 type FindStoragePoolsForMigrationResponse struct {
 	Allocatediops        int64             `json:"allocatediops"`
+	Capacitybytes        int64             `json:"capacitybytes"`
 	Capacityiops         int64             `json:"capacityiops"`
 	Clusterid            string            `json:"clusterid"`
 	Clustername          string            `json:"clustername"`
 	Created              string            `json:"created"`
+	Details              map[string]string `json:"details"`
 	Disksizeallocated    int64             `json:"disksizeallocated"`
 	Disksizetotal        int64             `json:"disksizetotal"`
 	Disksizeused         int64             `json:"disksizeused"`
@@ -731,7 +771,9 @@ type FindStoragePoolsForMigrationResponse struct {
 	Istagarule           bool              `json:"istagarule"`
 	JobID                string            `json:"jobid"`
 	Jobstatus            int               `json:"jobstatus"`
+	Managed              bool              `json:"managed"`
 	Name                 string            `json:"name"`
+	Nfsmountopts         string            `json:"nfsmountopts"`
 	Overprovisionfactor  string            `json:"overprovisionfactor"`
 	Path                 string            `json:"path"`
 	Podid                string            `json:"podid"`
@@ -739,12 +781,92 @@ type FindStoragePoolsForMigrationResponse struct {
 	Provider             string            `json:"provider"`
 	Scope                string            `json:"scope"`
 	State                string            `json:"state"`
+	Storageaccessgroups  string            `json:"storageaccessgroups"`
 	Storagecapabilities  map[string]string `json:"storagecapabilities"`
+	Storagecustomstats   map[string]string `json:"storagecustomstats"`
 	Suitableformigration bool              `json:"suitableformigration"`
 	Tags                 string            `json:"tags"`
 	Type                 string            `json:"type"`
+	Usediops             int64             `json:"usediops"`
 	Zoneid               string            `json:"zoneid"`
 	Zonename             string            `json:"zonename"`
+}
+
+type ListElastistorPoolParams struct {
+	p map[string]interface{}
+}
+
+func (p *ListElastistorPoolParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["id"]; found {
+		vv := strconv.FormatInt(v.(int64), 10)
+		u.Set("id", vv)
+	}
+	return u
+}
+
+func (p *ListElastistorPoolParams) SetId(v int64) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["id"] = v
+}
+
+func (p *ListElastistorPoolParams) ResetId() {
+	if p.p != nil && p.p["id"] != nil {
+		delete(p.p, "id")
+	}
+}
+
+func (p *ListElastistorPoolParams) GetId() (int64, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["id"].(int64)
+	return value, ok
+}
+
+// You should always use this function to get a new ListElastistorPoolParams instance,
+// as then you are sure you have configured all required params
+func (s *PoolService) NewListElastistorPoolParams() *ListElastistorPoolParams {
+	p := &ListElastistorPoolParams{}
+	p.p = make(map[string]interface{})
+	return p
+}
+
+// Lists the pools of elastistor
+func (s *PoolService) ListElastistorPool(p *ListElastistorPoolParams) (*ListElastistorPoolResponse, error) {
+	resp, err := s.cs.newRequest("listElastistorPool", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var r ListElastistorPoolResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return nil, err
+	}
+
+	return &r, nil
+}
+
+type ListElastistorPoolResponse struct {
+	Count          int               `json:"count"`
+	ElastistorPool []*ElastistorPool `json:"elastistorpool"`
+}
+
+type ElastistorPool struct {
+	Controllerid string `json:"controllerid"`
+	Gateway      string `json:"gateway"`
+	Id           string `json:"id"`
+	JobID        string `json:"jobid"`
+	Jobstatus    int    `json:"jobstatus"`
+	Maxiops      int64  `json:"maxiops"`
+	Name         string `json:"name"`
+	Size         int64  `json:"size"`
+	State        string `json:"state"`
 }
 
 type ListStoragePoolsParams struct {
@@ -793,6 +915,13 @@ func (p *ListStoragePoolsParams) toURLValues() url.Values {
 	}
 	if v, found := p.p["status"]; found {
 		u.Set("status", v.(string))
+	}
+	if v, found := p.p["storageaccessgroup"]; found {
+		u.Set("storageaccessgroup", v.(string))
+	}
+	if v, found := p.p["storagecustomstats"]; found {
+		vv := strconv.FormatBool(v.(bool))
+		u.Set("storagecustomstats", vv)
 	}
 	if v, found := p.p["zoneid"]; found {
 		u.Set("zoneid", v.(string))
@@ -1052,6 +1181,48 @@ func (p *ListStoragePoolsParams) GetStatus() (string, bool) {
 	return value, ok
 }
 
+func (p *ListStoragePoolsParams) SetStorageaccessgroup(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["storageaccessgroup"] = v
+}
+
+func (p *ListStoragePoolsParams) ResetStorageaccessgroup() {
+	if p.p != nil && p.p["storageaccessgroup"] != nil {
+		delete(p.p, "storageaccessgroup")
+	}
+}
+
+func (p *ListStoragePoolsParams) GetStorageaccessgroup() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["storageaccessgroup"].(string)
+	return value, ok
+}
+
+func (p *ListStoragePoolsParams) SetStoragecustomstats(v bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["storagecustomstats"] = v
+}
+
+func (p *ListStoragePoolsParams) ResetStoragecustomstats() {
+	if p.p != nil && p.p["storagecustomstats"] != nil {
+		delete(p.p, "storagecustomstats")
+	}
+}
+
+func (p *ListStoragePoolsParams) GetStoragecustomstats() (bool, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["storagecustomstats"].(bool)
+	return value, ok
+}
+
 func (p *ListStoragePoolsParams) SetZoneid(v string) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
@@ -1186,10 +1357,12 @@ type ListStoragePoolsResponse struct {
 
 type StoragePool struct {
 	Allocatediops        int64             `json:"allocatediops"`
+	Capacitybytes        int64             `json:"capacitybytes"`
 	Capacityiops         int64             `json:"capacityiops"`
 	Clusterid            string            `json:"clusterid"`
 	Clustername          string            `json:"clustername"`
 	Created              string            `json:"created"`
+	Details              map[string]string `json:"details"`
 	Disksizeallocated    int64             `json:"disksizeallocated"`
 	Disksizetotal        int64             `json:"disksizetotal"`
 	Disksizeused         int64             `json:"disksizeused"`
@@ -1200,7 +1373,9 @@ type StoragePool struct {
 	Istagarule           bool              `json:"istagarule"`
 	JobID                string            `json:"jobid"`
 	Jobstatus            int               `json:"jobstatus"`
+	Managed              bool              `json:"managed"`
 	Name                 string            `json:"name"`
+	Nfsmountopts         string            `json:"nfsmountopts"`
 	Overprovisionfactor  string            `json:"overprovisionfactor"`
 	Path                 string            `json:"path"`
 	Podid                string            `json:"podid"`
@@ -1208,10 +1383,13 @@ type StoragePool struct {
 	Provider             string            `json:"provider"`
 	Scope                string            `json:"scope"`
 	State                string            `json:"state"`
+	Storageaccessgroups  string            `json:"storageaccessgroups"`
 	Storagecapabilities  map[string]string `json:"storagecapabilities"`
+	Storagecustomstats   map[string]string `json:"storagecustomstats"`
 	Suitableformigration bool              `json:"suitableformigration"`
 	Tags                 string            `json:"tags"`
 	Type                 string            `json:"type"`
+	Usediops             int64             `json:"usediops"`
 	Zoneid               string            `json:"zoneid"`
 	Zonename             string            `json:"zonename"`
 }
@@ -1263,7 +1441,7 @@ func (s *PoolService) NewSyncStoragePoolParams(id string) *SyncStoragePoolParams
 
 // Sync storage pool with management server (currently supported for Datastore Cluster in VMware and syncs the datastores in it)
 func (s *PoolService) SyncStoragePool(p *SyncStoragePoolParams) (*SyncStoragePoolResponse, error) {
-	resp, err := s.cs.newRequest("syncStoragePool", p.toURLValues())
+	resp, err := s.cs.newPostRequest("syncStoragePool", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1298,10 +1476,12 @@ func (s *PoolService) SyncStoragePool(p *SyncStoragePoolParams) (*SyncStoragePoo
 
 type SyncStoragePoolResponse struct {
 	Allocatediops        int64             `json:"allocatediops"`
+	Capacitybytes        int64             `json:"capacitybytes"`
 	Capacityiops         int64             `json:"capacityiops"`
 	Clusterid            string            `json:"clusterid"`
 	Clustername          string            `json:"clustername"`
 	Created              string            `json:"created"`
+	Details              map[string]string `json:"details"`
 	Disksizeallocated    int64             `json:"disksizeallocated"`
 	Disksizetotal        int64             `json:"disksizetotal"`
 	Disksizeused         int64             `json:"disksizeused"`
@@ -1312,7 +1492,9 @@ type SyncStoragePoolResponse struct {
 	Istagarule           bool              `json:"istagarule"`
 	JobID                string            `json:"jobid"`
 	Jobstatus            int               `json:"jobstatus"`
+	Managed              bool              `json:"managed"`
 	Name                 string            `json:"name"`
+	Nfsmountopts         string            `json:"nfsmountopts"`
 	Overprovisionfactor  string            `json:"overprovisionfactor"`
 	Path                 string            `json:"path"`
 	Podid                string            `json:"podid"`
@@ -1320,10 +1502,13 @@ type SyncStoragePoolResponse struct {
 	Provider             string            `json:"provider"`
 	Scope                string            `json:"scope"`
 	State                string            `json:"state"`
+	Storageaccessgroups  string            `json:"storageaccessgroups"`
 	Storagecapabilities  map[string]string `json:"storagecapabilities"`
+	Storagecustomstats   map[string]string `json:"storagecustomstats"`
 	Suitableformigration bool              `json:"suitableformigration"`
 	Tags                 string            `json:"tags"`
 	Type                 string            `json:"type"`
+	Usediops             int64             `json:"usediops"`
 	Zoneid               string            `json:"zoneid"`
 	Zonename             string            `json:"zonename"`
 }
@@ -1575,7 +1760,7 @@ func (s *PoolService) NewUpdateStoragePoolParams(id string) *UpdateStoragePoolPa
 
 // Updates a storage pool.
 func (s *PoolService) UpdateStoragePool(p *UpdateStoragePoolParams) (*UpdateStoragePoolResponse, error) {
-	resp, err := s.cs.newRequest("updateStoragePool", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateStoragePool", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1590,10 +1775,12 @@ func (s *PoolService) UpdateStoragePool(p *UpdateStoragePoolParams) (*UpdateStor
 
 type UpdateStoragePoolResponse struct {
 	Allocatediops        int64             `json:"allocatediops"`
+	Capacitybytes        int64             `json:"capacitybytes"`
 	Capacityiops         int64             `json:"capacityiops"`
 	Clusterid            string            `json:"clusterid"`
 	Clustername          string            `json:"clustername"`
 	Created              string            `json:"created"`
+	Details              map[string]string `json:"details"`
 	Disksizeallocated    int64             `json:"disksizeallocated"`
 	Disksizetotal        int64             `json:"disksizetotal"`
 	Disksizeused         int64             `json:"disksizeused"`
@@ -1604,7 +1791,9 @@ type UpdateStoragePoolResponse struct {
 	Istagarule           bool              `json:"istagarule"`
 	JobID                string            `json:"jobid"`
 	Jobstatus            int               `json:"jobstatus"`
+	Managed              bool              `json:"managed"`
 	Name                 string            `json:"name"`
+	Nfsmountopts         string            `json:"nfsmountopts"`
 	Overprovisionfactor  string            `json:"overprovisionfactor"`
 	Path                 string            `json:"path"`
 	Podid                string            `json:"podid"`
@@ -1612,10 +1801,401 @@ type UpdateStoragePoolResponse struct {
 	Provider             string            `json:"provider"`
 	Scope                string            `json:"scope"`
 	State                string            `json:"state"`
+	Storageaccessgroups  string            `json:"storageaccessgroups"`
 	Storagecapabilities  map[string]string `json:"storagecapabilities"`
+	Storagecustomstats   map[string]string `json:"storagecustomstats"`
 	Suitableformigration bool              `json:"suitableformigration"`
 	Tags                 string            `json:"tags"`
 	Type                 string            `json:"type"`
+	Usediops             int64             `json:"usediops"`
 	Zoneid               string            `json:"zoneid"`
 	Zonename             string            `json:"zonename"`
+}
+
+type ConfigureStorageAccessParams struct {
+	p map[string]interface{}
+}
+
+func (p *ConfigureStorageAccessParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["clusterid"]; found {
+		u.Set("clusterid", v.(string))
+	}
+	if v, found := p.p["hostid"]; found {
+		u.Set("hostid", v.(string))
+	}
+	if v, found := p.p["podid"]; found {
+		u.Set("podid", v.(string))
+	}
+	if v, found := p.p["storageaccessgroups"]; found {
+		vv := strings.Join(v.([]string), ",")
+		u.Set("storageaccessgroups", vv)
+	}
+	if v, found := p.p["storageid"]; found {
+		u.Set("storageid", v.(string))
+	}
+	if v, found := p.p["zoneid"]; found {
+		u.Set("zoneid", v.(string))
+	}
+	return u
+}
+
+func (p *ConfigureStorageAccessParams) SetClusterid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["clusterid"] = v
+}
+
+func (p *ConfigureStorageAccessParams) ResetClusterid() {
+	if p.p != nil && p.p["clusterid"] != nil {
+		delete(p.p, "clusterid")
+	}
+}
+
+func (p *ConfigureStorageAccessParams) GetClusterid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["clusterid"].(string)
+	return value, ok
+}
+
+func (p *ConfigureStorageAccessParams) SetHostid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["hostid"] = v
+}
+
+func (p *ConfigureStorageAccessParams) ResetHostid() {
+	if p.p != nil && p.p["hostid"] != nil {
+		delete(p.p, "hostid")
+	}
+}
+
+func (p *ConfigureStorageAccessParams) GetHostid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["hostid"].(string)
+	return value, ok
+}
+
+func (p *ConfigureStorageAccessParams) SetPodid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["podid"] = v
+}
+
+func (p *ConfigureStorageAccessParams) ResetPodid() {
+	if p.p != nil && p.p["podid"] != nil {
+		delete(p.p, "podid")
+	}
+}
+
+func (p *ConfigureStorageAccessParams) GetPodid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["podid"].(string)
+	return value, ok
+}
+
+func (p *ConfigureStorageAccessParams) SetStorageaccessgroups(v []string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["storageaccessgroups"] = v
+}
+
+func (p *ConfigureStorageAccessParams) ResetStorageaccessgroups() {
+	if p.p != nil && p.p["storageaccessgroups"] != nil {
+		delete(p.p, "storageaccessgroups")
+	}
+}
+
+func (p *ConfigureStorageAccessParams) GetStorageaccessgroups() ([]string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["storageaccessgroups"].([]string)
+	return value, ok
+}
+
+func (p *ConfigureStorageAccessParams) SetStorageid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["storageid"] = v
+}
+
+func (p *ConfigureStorageAccessParams) ResetStorageid() {
+	if p.p != nil && p.p["storageid"] != nil {
+		delete(p.p, "storageid")
+	}
+}
+
+func (p *ConfigureStorageAccessParams) GetStorageid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["storageid"].(string)
+	return value, ok
+}
+
+func (p *ConfigureStorageAccessParams) SetZoneid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["zoneid"] = v
+}
+
+func (p *ConfigureStorageAccessParams) ResetZoneid() {
+	if p.p != nil && p.p["zoneid"] != nil {
+		delete(p.p, "zoneid")
+	}
+}
+
+func (p *ConfigureStorageAccessParams) GetZoneid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["zoneid"].(string)
+	return value, ok
+}
+
+// You should always use this function to get a new ConfigureStorageAccessParams instance,
+// as then you are sure you have configured all required params
+func (s *PoolService) NewConfigureStorageAccessParams() *ConfigureStorageAccessParams {
+	p := &ConfigureStorageAccessParams{}
+	p.p = make(map[string]interface{})
+	return p
+}
+
+// Configure the storage access groups on zone/pod/cluster/host and storage, accordingly connections to the storage pools
+func (s *PoolService) ConfigureStorageAccess(p *ConfigureStorageAccessParams) (*StorageAccessResponse, error) {
+	resp, err := s.cs.newPostRequest("configureStorageAccess", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var r StorageAccessResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return nil, err
+	}
+
+	// If we have a async client, we need to wait for the async result
+	if s.cs.async {
+		b, err := s.cs.GetAsyncJobResult(r.JobID, s.cs.timeout)
+		if err != nil {
+			if err == AsyncTimeoutErr {
+				return &r, err
+			}
+			return nil, err
+		}
+
+		if err := json.Unmarshal(b, &r); err != nil {
+			return nil, err
+		}
+	}
+
+	return &r, nil
+}
+
+type StorageAccessResponse struct {
+	Displaytext string `json:"displaytext"`
+	JobID       string `json:"jobid"`
+	Jobstatus   int    `json:"jobstatus"`
+	Success     bool   `json:"success"`
+}
+
+type ListStorageAccessGroupsParams struct {
+	p map[string]interface{}
+}
+
+func (p *ListStorageAccessGroupsParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["keyword"]; found {
+		u.Set("keyword", v.(string))
+	}
+	if v, found := p.p["name"]; found {
+		u.Set("name", v.(string))
+	}
+	if v, found := p.p["page"]; found {
+		vv := strconv.Itoa(v.(int))
+		u.Set("page", vv)
+	}
+	if v, found := p.p["pagesize"]; found {
+		vv := strconv.Itoa(v.(int))
+		u.Set("pagesize", vv)
+	}
+	return u
+}
+
+func (p *ListStorageAccessGroupsParams) SetKeyword(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["keyword"] = v
+}
+
+func (p *ListStorageAccessGroupsParams) ResetKeyword() {
+	if p.p != nil && p.p["keyword"] != nil {
+		delete(p.p, "keyword")
+	}
+}
+
+func (p *ListStorageAccessGroupsParams) GetKeyword() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["keyword"].(string)
+	return value, ok
+}
+
+func (p *ListStorageAccessGroupsParams) SetName(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["name"] = v
+}
+
+func (p *ListStorageAccessGroupsParams) ResetName() {
+	if p.p != nil && p.p["name"] != nil {
+		delete(p.p, "name")
+	}
+}
+
+func (p *ListStorageAccessGroupsParams) GetName() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["name"].(string)
+	return value, ok
+}
+
+func (p *ListStorageAccessGroupsParams) SetPage(v int) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["page"] = v
+}
+
+func (p *ListStorageAccessGroupsParams) ResetPage() {
+	if p.p != nil && p.p["page"] != nil {
+		delete(p.p, "page")
+	}
+}
+
+func (p *ListStorageAccessGroupsParams) GetPage() (int, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["page"].(int)
+	return value, ok
+}
+
+func (p *ListStorageAccessGroupsParams) SetPagesize(v int) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["pagesize"] = v
+}
+
+func (p *ListStorageAccessGroupsParams) ResetPagesize() {
+	if p.p != nil && p.p["pagesize"] != nil {
+		delete(p.p, "pagesize")
+	}
+}
+
+func (p *ListStorageAccessGroupsParams) GetPagesize() (int, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["pagesize"].(int)
+	return value, ok
+}
+
+// You should always use this function to get a new ListStorageAccessGroupsParams instance,
+// as then you are sure you have configured all required params
+func (s *PoolService) NewListStorageAccessGroupsParams() *ListStorageAccessGroupsParams {
+	p := &ListStorageAccessGroupsParams{}
+	p.p = make(map[string]interface{})
+	return p
+}
+
+// This is a courtesy helper function, which in some cases may not work as expected!
+func (s *PoolService) GetStorageAccessGroupID(name string, opts ...OptionFunc) (string, int, error) {
+	p := &ListStorageAccessGroupsParams{}
+	p.p = make(map[string]interface{})
+
+	p.p["name"] = name
+
+	for _, fn := range append(s.cs.options, opts...) {
+		if err := fn(s.cs, p); err != nil {
+			return "", -1, err
+		}
+	}
+
+	l, err := s.ListStorageAccessGroups(p)
+	if err != nil {
+		return "", -1, err
+	}
+
+	if l.Count == 0 {
+		return "", l.Count, fmt.Errorf("No match found for %s: %+v", name, l)
+	}
+
+	if l.Count == 1 {
+		return l.StorageAccessGroups[0].Id, l.Count, nil
+	}
+
+	if l.Count > 1 {
+		for _, v := range l.StorageAccessGroups {
+			if v.Name == name {
+				return v.Id, l.Count, nil
+			}
+		}
+	}
+	return "", l.Count, fmt.Errorf("Could not find an exact match for %s: %+v", name, l)
+}
+
+// Lists storage access groups
+func (s *PoolService) ListStorageAccessGroups(p *ListStorageAccessGroupsParams) (*ListStorageAccessGroupsResponse, error) {
+	resp, err := s.cs.newRequest("listStorageAccessGroups", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var r ListStorageAccessGroupsResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return nil, err
+	}
+
+	return &r, nil
+}
+
+type ListStorageAccessGroupsResponse struct {
+	Count               int                   `json:"count"`
+	StorageAccessGroups []*StorageAccessGroup `json:"storageaccessgroup"`
+}
+
+type StorageAccessGroup struct {
+	Clusters     string `json:"clusters"`
+	Hosts        string `json:"hosts"`
+	Id           string `json:"id"`
+	JobID        string `json:"jobid"`
+	Jobstatus    int    `json:"jobstatus"`
+	Name         string `json:"name"`
+	Pods         string `json:"pods"`
+	Storagepools string `json:"storagepools"`
+	Zones        string `json:"zones"`
 }

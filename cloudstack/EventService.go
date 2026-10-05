@@ -158,7 +158,7 @@ func (s *EventService) NewArchiveEventsParams() *ArchiveEventsParams {
 
 // Archive one or more events.
 func (s *EventService) ArchiveEvents(p *ArchiveEventsParams) (*ArchiveEventsResponse, error) {
-	resp, err := s.cs.newRequest("archiveEvents", p.toURLValues())
+	resp, err := s.cs.newPostRequest("archiveEvents", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +324,7 @@ func (s *EventService) NewDeleteEventsParams() *DeleteEventsParams {
 
 // Delete one or more events.
 func (s *EventService) DeleteEvents(p *DeleteEventsParams) (*DeleteEventsResponse, error) {
-	resp, err := s.cs.newRequest("deleteEvents", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteEvents", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -486,6 +486,9 @@ func (p *ListEventsParams) toURLValues() url.Values {
 	}
 	if v, found := p.p["startid"]; found {
 		u.Set("startid", v.(string))
+	}
+	if v, found := p.p["state"]; found {
+		u.Set("state", v.(string))
 	}
 	if v, found := p.p["type"]; found {
 		u.Set("type", v.(string))
@@ -871,6 +874,27 @@ func (p *ListEventsParams) GetStartid() (string, bool) {
 	return value, ok
 }
 
+func (p *ListEventsParams) SetState(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["state"] = v
+}
+
+func (p *ListEventsParams) ResetState() {
+	if p.p != nil && p.p["state"] != nil {
+		delete(p.p, "state")
+	}
+}
+
+func (p *ListEventsParams) GetState() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["state"].(string)
+	return value, ok
+}
+
 func (p *ListEventsParams) SetType(v string) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
@@ -960,6 +984,7 @@ type Event struct {
 	Description  string `json:"description"`
 	Domain       string `json:"domain"`
 	Domainid     string `json:"domainid"`
+	Domainpath   string `json:"domainpath"`
 	Id           string `json:"id"`
 	JobID        string `json:"jobid"`
 	Jobstatus    int    `json:"jobstatus"`

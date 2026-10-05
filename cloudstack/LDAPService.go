@@ -24,13 +24,14 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type LDAPServiceIface interface {
 	AddLdapConfiguration(p *AddLdapConfigurationParams) (*AddLdapConfigurationResponse, error)
 	NewAddLdapConfigurationParams(hostname string, port int) *AddLdapConfigurationParams
 	DeleteLdapConfiguration(p *DeleteLdapConfigurationParams) (*DeleteLdapConfigurationResponse, error)
-	NewDeleteLdapConfigurationParams(hostname string) *DeleteLdapConfigurationParams
+	NewDeleteLdapConfigurationParams() *DeleteLdapConfigurationParams
 	ImportLdapUsers(p *ImportLdapUsersParams) (*ImportLdapUsersResponse, error)
 	NewImportLdapUsersParams() *ImportLdapUsersParams
 	LdapConfig(p *LdapConfigParams) (*LdapConfigResponse, error)
@@ -43,6 +44,7 @@ type LDAPServiceIface interface {
 	NewLinkDomainToLdapParams(accounttype int, domainid string, lDAPType string) *LinkDomainToLdapParams
 	ListLdapConfigurations(p *ListLdapConfigurationsParams) (*ListLdapConfigurationsResponse, error)
 	NewListLdapConfigurationsParams() *ListLdapConfigurationsParams
+	GetLdapConfigurationByID(id string, opts ...OptionFunc) (*LdapConfiguration, int, error)
 	ListLdapUsers(p *ListLdapUsersParams) (*ListLdapUsersResponse, error)
 	NewListLdapUsersParams() *ListLdapUsersParams
 	SearchLdap(p *SearchLdapParams) (*SearchLdapResponse, error)
@@ -146,7 +148,7 @@ func (s *LDAPService) NewAddLdapConfigurationParams(hostname string, port int) *
 
 // Add a new Ldap Configuration
 func (s *LDAPService) AddLdapConfiguration(p *AddLdapConfigurationParams) (*AddLdapConfigurationResponse, error) {
-	resp, err := s.cs.newRequest("addLdapConfiguration", p.toURLValues())
+	resp, err := s.cs.newPostRequest("addLdapConfiguration", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -162,6 +164,7 @@ func (s *LDAPService) AddLdapConfiguration(p *AddLdapConfigurationParams) (*AddL
 type AddLdapConfigurationResponse struct {
 	Domainid  string `json:"domainid"`
 	Hostname  string `json:"hostname"`
+	Id        string `json:"id"`
 	JobID     string `json:"jobid"`
 	Jobstatus int    `json:"jobstatus"`
 	Port      int    `json:"port"`
@@ -181,6 +184,9 @@ func (p *DeleteLdapConfigurationParams) toURLValues() url.Values {
 	}
 	if v, found := p.p["hostname"]; found {
 		u.Set("hostname", v.(string))
+	}
+	if v, found := p.p["id"]; found {
+		u.Set("id", v.(string))
 	}
 	if v, found := p.p["port"]; found {
 		vv := strconv.Itoa(v.(int))
@@ -231,6 +237,27 @@ func (p *DeleteLdapConfigurationParams) GetHostname() (string, bool) {
 	return value, ok
 }
 
+func (p *DeleteLdapConfigurationParams) SetId(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["id"] = v
+}
+
+func (p *DeleteLdapConfigurationParams) ResetId() {
+	if p.p != nil && p.p["id"] != nil {
+		delete(p.p, "id")
+	}
+}
+
+func (p *DeleteLdapConfigurationParams) GetId() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["id"].(string)
+	return value, ok
+}
+
 func (p *DeleteLdapConfigurationParams) SetPort(v int) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
@@ -254,16 +281,15 @@ func (p *DeleteLdapConfigurationParams) GetPort() (int, bool) {
 
 // You should always use this function to get a new DeleteLdapConfigurationParams instance,
 // as then you are sure you have configured all required params
-func (s *LDAPService) NewDeleteLdapConfigurationParams(hostname string) *DeleteLdapConfigurationParams {
+func (s *LDAPService) NewDeleteLdapConfigurationParams() *DeleteLdapConfigurationParams {
 	p := &DeleteLdapConfigurationParams{}
 	p.p = make(map[string]interface{})
-	p.p["hostname"] = hostname
 	return p
 }
 
 // Remove an Ldap Configuration
 func (s *LDAPService) DeleteLdapConfiguration(p *DeleteLdapConfigurationParams) (*DeleteLdapConfigurationResponse, error) {
-	resp, err := s.cs.newRequest("deleteLdapConfiguration", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteLdapConfiguration", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -279,6 +305,7 @@ func (s *LDAPService) DeleteLdapConfiguration(p *DeleteLdapConfigurationParams) 
 type DeleteLdapConfigurationResponse struct {
 	Domainid  string `json:"domainid"`
 	Hostname  string `json:"hostname"`
+	Id        string `json:"id"`
 	JobID     string `json:"jobid"`
 	Jobstatus int    `json:"jobstatus"`
 	Port      int    `json:"port"`
@@ -553,7 +580,7 @@ func (s *LDAPService) NewImportLdapUsersParams() *ImportLdapUsersParams {
 
 // Import LDAP users
 func (s *LDAPService) ImportLdapUsers(p *ImportLdapUsersParams) (*ImportLdapUsersResponse, error) {
-	resp, err := s.cs.newRequest("importLdapUsers", p.toURLValues())
+	resp, err := s.cs.newPostRequest("importLdapUsers", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -843,7 +870,7 @@ func (s *LDAPService) NewLdapConfigParams() *LdapConfigParams {
 
 // (Deprecated, use addLdapConfiguration) Configure the LDAP context for this site.
 func (s *LDAPService) LdapConfig(p *LdapConfigParams) (*LdapConfigResponse, error) {
-	resp, err := s.cs.newRequest("ldapConfig", p.toURLValues())
+	resp, err := s.cs.newPostRequest("ldapConfig", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1136,7 +1163,7 @@ func (s *LDAPService) NewLdapCreateAccountParams(username string) *LdapCreateAcc
 
 // Creates an account from an LDAP user
 func (s *LDAPService) LdapCreateAccount(p *LdapCreateAccountParams) (*LdapCreateAccountResponse, error) {
-	resp, err := s.cs.newRequest("ldapCreateAccount", p.toURLValues())
+	resp, err := s.cs.newPostRequest("ldapCreateAccount", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1152,6 +1179,16 @@ func (s *LDAPService) LdapCreateAccount(p *LdapCreateAccountParams) (*LdapCreate
 type LdapCreateAccountResponse struct {
 	Accountdetails            map[string]string               `json:"accountdetails"`
 	Accounttype               int                             `json:"accounttype"`
+	Apikeyaccess              string                          `json:"apikeyaccess"`
+	Backupavailable           string                          `json:"backupavailable"`
+	Backuplimit               string                          `json:"backuplimit"`
+	Backupstorageavailable    string                          `json:"backupstorageavailable"`
+	Backupstoragelimit        string                          `json:"backupstoragelimit"`
+	Backupstoragetotal        int64                           `json:"backupstoragetotal"`
+	Backuptotal               int64                           `json:"backuptotal"`
+	Bucketavailable           string                          `json:"bucketavailable"`
+	Bucketlimit               string                          `json:"bucketlimit"`
+	Buckettotal               int64                           `json:"buckettotal"`
 	Cpuavailable              string                          `json:"cpuavailable"`
 	Cpulimit                  string                          `json:"cpulimit"`
 	Cputotal                  int64                           `json:"cputotal"`
@@ -1160,6 +1197,9 @@ type LdapCreateAccountResponse struct {
 	Domain                    string                          `json:"domain"`
 	Domainid                  string                          `json:"domainid"`
 	Domainpath                string                          `json:"domainpath"`
+	Gpuavailable              string                          `json:"gpuavailable"`
+	Gpulimit                  string                          `json:"gpulimit"`
+	Gputotal                  int64                           `json:"gputotal"`
 	Groups                    []string                        `json:"groups"`
 	Icon                      interface{}                     `json:"icon"`
 	Id                        string                          `json:"id"`
@@ -1178,6 +1218,9 @@ type LdapCreateAccountResponse struct {
 	Networkdomain             string                          `json:"networkdomain"`
 	Networklimit              string                          `json:"networklimit"`
 	Networktotal              int64                           `json:"networktotal"`
+	Objectstorageavailable    string                          `json:"objectstorageavailable"`
+	Objectstoragelimit        string                          `json:"objectstoragelimit"`
+	Objectstoragetotal        int64                           `json:"objectstoragetotal"`
 	Primarystorageavailable   string                          `json:"primarystorageavailable"`
 	Primarystoragelimit       string                          `json:"primarystoragelimit"`
 	Primarystoragetotal       int64                           `json:"primarystoragetotal"`
@@ -1196,6 +1239,7 @@ type LdapCreateAccountResponse struct {
 	Snapshotlimit             string                          `json:"snapshotlimit"`
 	Snapshottotal             int64                           `json:"snapshottotal"`
 	State                     string                          `json:"state"`
+	Taggedresources           []string                        `json:"taggedresources"`
 	Templateavailable         string                          `json:"templateavailable"`
 	Templatelimit             string                          `json:"templatelimit"`
 	Templatetotal             int64                           `json:"templatetotal"`
@@ -1218,6 +1262,7 @@ type LdapCreateAccountResponseUser struct {
 	Accountid           string      `json:"accountid"`
 	Accounttype         int         `json:"accounttype"`
 	Apikey              string      `json:"apikey"`
+	Apikeyaccess        string      `json:"apikeyaccess"`
 	Created             string      `json:"created"`
 	Domain              string      `json:"domain"`
 	Domainid            string      `json:"domainid"`
@@ -1262,7 +1307,7 @@ func (s *LDAPService) NewLdapRemoveParams() *LdapRemoveParams {
 
 // (Deprecated , use deleteLdapConfiguration) Remove the LDAP context for this site.
 func (s *LDAPService) LdapRemove(p *LdapRemoveParams) (*LdapRemoveResponse, error) {
-	resp, err := s.cs.newRequest("ldapRemove", p.toURLValues())
+	resp, err := s.cs.newPostRequest("ldapRemove", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1455,9 +1500,9 @@ func (s *LDAPService) NewLinkDomainToLdapParams(accounttype int, domainid string
 	return p
 }
 
-// link an existing cloudstack domain to group or OU in ldap
+// Link an existing Cloudstack domain to group or OU in ldap
 func (s *LDAPService) LinkDomainToLdap(p *LinkDomainToLdapParams) (*LinkDomainToLdapResponse, error) {
-	resp, err := s.cs.newRequest("linkDomainToLdap", p.toURLValues())
+	resp, err := s.cs.newPostRequest("linkDomainToLdap", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1495,6 +1540,9 @@ func (p *ListLdapConfigurationsParams) toURLValues() url.Values {
 	}
 	if v, found := p.p["hostname"]; found {
 		u.Set("hostname", v.(string))
+	}
+	if v, found := p.p["id"]; found {
+		u.Set("id", v.(string))
 	}
 	if v, found := p.p["keyword"]; found {
 		u.Set("keyword", v.(string))
@@ -1557,6 +1605,27 @@ func (p *ListLdapConfigurationsParams) GetHostname() (string, bool) {
 		p.p = make(map[string]interface{})
 	}
 	value, ok := p.p["hostname"].(string)
+	return value, ok
+}
+
+func (p *ListLdapConfigurationsParams) SetId(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["id"] = v
+}
+
+func (p *ListLdapConfigurationsParams) ResetId() {
+	if p.p != nil && p.p["id"] != nil {
+		delete(p.p, "id")
+	}
+}
+
+func (p *ListLdapConfigurationsParams) GetId() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["id"].(string)
 	return value, ok
 }
 
@@ -1673,6 +1742,39 @@ func (s *LDAPService) NewListLdapConfigurationsParams() *ListLdapConfigurationsP
 	return p
 }
 
+// This is a courtesy helper function, which in some cases may not work as expected!
+func (s *LDAPService) GetLdapConfigurationByID(id string, opts ...OptionFunc) (*LdapConfiguration, int, error) {
+	p := &ListLdapConfigurationsParams{}
+	p.p = make(map[string]interface{})
+
+	p.p["id"] = id
+
+	for _, fn := range append(s.cs.options, opts...) {
+		if err := fn(s.cs, p); err != nil {
+			return nil, -1, err
+		}
+	}
+
+	l, err := s.ListLdapConfigurations(p)
+	if err != nil {
+		if strings.Contains(err.Error(), fmt.Sprintf(
+			"Invalid parameter id value=%s due to incorrect long value format, "+
+				"or entity does not exist", id)) {
+			return nil, 0, fmt.Errorf("No match found for %s: %+v", id, l)
+		}
+		return nil, -1, err
+	}
+
+	if l.Count == 0 {
+		return nil, l.Count, fmt.Errorf("No match found for %s: %+v", id, l)
+	}
+
+	if l.Count == 1 {
+		return l.LdapConfigurations[0], l.Count, nil
+	}
+	return nil, l.Count, fmt.Errorf("There is more then one result for LdapConfiguration UUID: %s!", id)
+}
+
 // Lists all LDAP configurations
 func (s *LDAPService) ListLdapConfigurations(p *ListLdapConfigurationsParams) (*ListLdapConfigurationsResponse, error) {
 	resp, err := s.cs.newRequest("listLdapConfigurations", p.toURLValues())
@@ -1696,6 +1798,7 @@ type ListLdapConfigurationsResponse struct {
 type LdapConfiguration struct {
 	Domainid  string `json:"domainid"`
 	Hostname  string `json:"hostname"`
+	Id        string `json:"id"`
 	JobID     string `json:"jobid"`
 	Jobstatus int    `json:"jobstatus"`
 	Port      int    `json:"port"`
@@ -2020,7 +2123,7 @@ func (s *LDAPService) NewSearchLdapParams(query string) *SearchLdapParams {
 
 // Searches LDAP based on the username attribute
 func (s *LDAPService) SearchLdap(p *SearchLdapParams) (*SearchLdapResponse, error) {
-	resp, err := s.cs.newRequest("searchLdap", p.toURLValues())
+	resp, err := s.cs.newPostRequest("searchLdap", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}

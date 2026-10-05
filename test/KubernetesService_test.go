@@ -227,4 +227,49 @@ func TestKubernetesService(t *testing.T) {
 	}
 	t.Run("RemoveVirtualMachinesFromKubernetesCluster", testremoveVirtualMachinesFromKubernetesCluster)
 
+	testaddNodesToKubernetesCluster := func(t *testing.T) {
+		if _, ok := response["addNodesToKubernetesCluster"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.Kubernetes.NewAddNodesToKubernetesClusterParams("id", []string{})
+		r, err := client.Kubernetes.AddNodesToKubernetesCluster(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("AddNodesToKubernetesCluster", testaddNodesToKubernetesCluster)
+
+	testremoveNodesFromKubernetesCluster := func(t *testing.T) {
+		if _, ok := response["removeNodesFromKubernetesCluster"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.Kubernetes.NewRemoveNodesFromKubernetesClusterParams("id", []string{})
+		r, err := client.Kubernetes.RemoveNodesFromKubernetesCluster(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("RemoveNodesFromKubernetesCluster", testremoveNodesFromKubernetesCluster)
+
+	testgetUploadParamsForKubernetesSupportedVersion := func(t *testing.T) {
+		if _, ok := response["getUploadParamsForKubernetesSupportedVersion"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.Kubernetes.NewGetUploadParamsForKubernetesSupportedVersionParams("format", 0, 0, "name", "semanticversion", "zoneid")
+		r, err := client.Kubernetes.GetUploadParamsForKubernetesSupportedVersion(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("GetUploadParamsForKubernetesSupportedVersion", testgetUploadParamsForKubernetesSupportedVersion)
+
 }

@@ -66,6 +66,12 @@ type ProjectServiceIface interface {
 	NewUpdateProjectRolePermissionParams(projectid string, projectroleid string) *UpdateProjectRolePermissionParams
 	DeleteProjectRolePermission(p *DeleteProjectRolePermissionParams) (*DeleteProjectRolePermissionResponse, error)
 	NewDeleteProjectRolePermissionParams(id string, projectid string) *DeleteProjectRolePermissionParams
+	CreateProjectRole(p *CreateProjectRoleParams) (*CreateProjectRoleResponse, error)
+	NewCreateProjectRoleParams(name string, projectid string) *CreateProjectRoleParams
+	UpdateProjectRole(p *UpdateProjectRoleParams) (*UpdateProjectRoleResponse, error)
+	NewUpdateProjectRoleParams(id string, projectid string) *UpdateProjectRoleParams
+	DeleteProjectRole(p *DeleteProjectRoleParams) (*DeleteProjectRoleResponse, error)
+	NewDeleteProjectRoleParams(id string, projectid string) *DeleteProjectRoleParams
 }
 
 type ActivateProjectParams struct {
@@ -115,7 +121,7 @@ func (s *ProjectService) NewActivateProjectParams(id string) *ActivateProjectPar
 
 // Activates a project
 func (s *ProjectService) ActivateProject(p *ActivateProjectParams) (*ActivateProjectResponse, error) {
-	resp, err := s.cs.newRequest("activateProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("activateProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +155,15 @@ func (s *ProjectService) ActivateProject(p *ActivateProjectParams) (*ActivatePro
 }
 
 type ActivateProjectResponse struct {
+	Backupavailable           string              `json:"backupavailable"`
+	Backuplimit               string              `json:"backuplimit"`
+	Backupstorageavailable    string              `json:"backupstorageavailable"`
+	Backupstoragelimit        string              `json:"backupstoragelimit"`
+	Backupstoragetotal        int64               `json:"backupstoragetotal"`
+	Backuptotal               int64               `json:"backuptotal"`
+	Bucketavailable           string              `json:"bucketavailable"`
+	Bucketlimit               string              `json:"bucketlimit"`
+	Buckettotal               int64               `json:"buckettotal"`
 	Cpuavailable              string              `json:"cpuavailable"`
 	Cpulimit                  string              `json:"cpulimit"`
 	Cputotal                  int64               `json:"cputotal"`
@@ -156,6 +171,9 @@ type ActivateProjectResponse struct {
 	Displaytext               string              `json:"displaytext"`
 	Domain                    string              `json:"domain"`
 	Domainid                  string              `json:"domainid"`
+	Gpuavailable              string              `json:"gpuavailable"`
+	Gpulimit                  string              `json:"gpulimit"`
+	Gputotal                  int64               `json:"gputotal"`
 	Icon                      interface{}         `json:"icon"`
 	Id                        string              `json:"id"`
 	Ipavailable               string              `json:"ipavailable"`
@@ -170,6 +188,9 @@ type ActivateProjectResponse struct {
 	Networkavailable          string              `json:"networkavailable"`
 	Networklimit              string              `json:"networklimit"`
 	Networktotal              int64               `json:"networktotal"`
+	Objectstorageavailable    string              `json:"objectstorageavailable"`
+	Objectstoragelimit        string              `json:"objectstoragelimit"`
+	Objectstoragetotal        int64               `json:"objectstoragetotal"`
 	Owner                     []map[string]string `json:"owner"`
 	Primarystorageavailable   string              `json:"primarystorageavailable"`
 	Primarystoragelimit       string              `json:"primarystoragelimit"`
@@ -182,6 +203,7 @@ type ActivateProjectResponse struct {
 	Snapshotlimit             string              `json:"snapshotlimit"`
 	Snapshottotal             int64               `json:"snapshottotal"`
 	State                     string              `json:"state"`
+	Taggedresources           []string            `json:"taggedresources"`
 	Tags                      []Tags              `json:"tags"`
 	Templateavailable         string              `json:"templateavailable"`
 	Templatelimit             string              `json:"templatelimit"`
@@ -340,9 +362,9 @@ func (s *ProjectService) NewAddAccountToProjectParams(projectid string) *AddAcco
 	return p
 }
 
-// Adds account to a project
+// Adds Account to a project
 func (s *ProjectService) AddAccountToProject(p *AddAccountToProjectParams) (*AddAccountToProjectResponse, error) {
-	resp, err := s.cs.newRequest("addAccountToProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("addAccountToProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -519,9 +541,9 @@ func (s *ProjectService) NewAddUserToProjectParams(projectid string, username st
 	return p
 }
 
-// Adds user to a project
+// Adds User to a project
 func (s *ProjectService) AddUserToProject(p *AddUserToProjectParams) (*AddUserToProjectResponse, error) {
-	resp, err := s.cs.newRequest("addUserToProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("addUserToProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -724,7 +746,7 @@ func (s *ProjectService) NewCreateProjectParams(displaytext string, name string)
 
 // Creates a project
 func (s *ProjectService) CreateProject(p *CreateProjectParams) (*CreateProjectResponse, error) {
-	resp, err := s.cs.newRequest("createProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -758,6 +780,15 @@ func (s *ProjectService) CreateProject(p *CreateProjectParams) (*CreateProjectRe
 }
 
 type CreateProjectResponse struct {
+	Backupavailable           string              `json:"backupavailable"`
+	Backuplimit               string              `json:"backuplimit"`
+	Backupstorageavailable    string              `json:"backupstorageavailable"`
+	Backupstoragelimit        string              `json:"backupstoragelimit"`
+	Backupstoragetotal        int64               `json:"backupstoragetotal"`
+	Backuptotal               int64               `json:"backuptotal"`
+	Bucketavailable           string              `json:"bucketavailable"`
+	Bucketlimit               string              `json:"bucketlimit"`
+	Buckettotal               int64               `json:"buckettotal"`
 	Cpuavailable              string              `json:"cpuavailable"`
 	Cpulimit                  string              `json:"cpulimit"`
 	Cputotal                  int64               `json:"cputotal"`
@@ -765,6 +796,9 @@ type CreateProjectResponse struct {
 	Displaytext               string              `json:"displaytext"`
 	Domain                    string              `json:"domain"`
 	Domainid                  string              `json:"domainid"`
+	Gpuavailable              string              `json:"gpuavailable"`
+	Gpulimit                  string              `json:"gpulimit"`
+	Gputotal                  int64               `json:"gputotal"`
 	Icon                      interface{}         `json:"icon"`
 	Id                        string              `json:"id"`
 	Ipavailable               string              `json:"ipavailable"`
@@ -779,6 +813,9 @@ type CreateProjectResponse struct {
 	Networkavailable          string              `json:"networkavailable"`
 	Networklimit              string              `json:"networklimit"`
 	Networktotal              int64               `json:"networktotal"`
+	Objectstorageavailable    string              `json:"objectstorageavailable"`
+	Objectstoragelimit        string              `json:"objectstoragelimit"`
+	Objectstoragetotal        int64               `json:"objectstoragetotal"`
 	Owner                     []map[string]string `json:"owner"`
 	Primarystorageavailable   string              `json:"primarystorageavailable"`
 	Primarystoragelimit       string              `json:"primarystoragelimit"`
@@ -791,6 +828,7 @@ type CreateProjectResponse struct {
 	Snapshotlimit             string              `json:"snapshotlimit"`
 	Snapshottotal             int64               `json:"snapshottotal"`
 	State                     string              `json:"state"`
+	Taggedresources           []string            `json:"taggedresources"`
 	Tags                      []Tags              `json:"tags"`
 	Templateavailable         string              `json:"templateavailable"`
 	Templatelimit             string              `json:"templatelimit"`
@@ -878,9 +916,9 @@ func (s *ProjectService) NewDeleteAccountFromProjectParams(account string, proje
 	return p
 }
 
-// Deletes account from the project
+// Deletes Account from the project
 func (s *ProjectService) DeleteAccountFromProject(p *DeleteAccountFromProjectParams) (*DeleteAccountFromProjectResponse, error) {
-	resp, err := s.cs.newRequest("deleteAccountFromProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteAccountFromProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -985,9 +1023,9 @@ func (s *ProjectService) NewDeleteUserFromProjectParams(projectid string, userid
 	return p
 }
 
-// Deletes user from the project
+// Deletes User from the project
 func (s *ProjectService) DeleteUserFromProject(p *DeleteUserFromProjectParams) (*DeleteUserFromProjectResponse, error) {
-	resp, err := s.cs.newRequest("deleteUserFromProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteUserFromProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1094,7 +1132,7 @@ func (s *ProjectService) NewDeleteProjectParams(id string) *DeleteProjectParams 
 
 // Deletes a project
 func (s *ProjectService) DeleteProject(p *DeleteProjectParams) (*DeleteProjectResponse, error) {
-	resp, err := s.cs.newRequest("deleteProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1176,7 +1214,7 @@ func (s *ProjectService) NewDeleteProjectInvitationParams(id string) *DeleteProj
 
 // Deletes project invitation
 func (s *ProjectService) DeleteProjectInvitation(p *DeleteProjectInvitationParams) (*DeleteProjectInvitationResponse, error) {
-	resp, err := s.cs.newRequest("deleteProjectInvitation", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteProjectInvitation", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1578,17 +1616,18 @@ type ListProjectInvitationsResponse struct {
 }
 
 type ProjectInvitation struct {
-	Account   string `json:"account"`
-	Domain    string `json:"domain"`
-	Domainid  string `json:"domainid"`
-	Email     string `json:"email"`
-	Id        string `json:"id"`
-	JobID     string `json:"jobid"`
-	Jobstatus int    `json:"jobstatus"`
-	Project   string `json:"project"`
-	Projectid string `json:"projectid"`
-	State     string `json:"state"`
-	Userid    string `json:"userid"`
+	Account    string `json:"account"`
+	Domain     string `json:"domain"`
+	Domainid   string `json:"domainid"`
+	Domainpath string `json:"domainpath"`
+	Email      string `json:"email"`
+	Id         string `json:"id"`
+	JobID      string `json:"jobid"`
+	Jobstatus  int    `json:"jobstatus"`
+	Project    string `json:"project"`
+	Projectid  string `json:"projectid"`
+	State      string `json:"state"`
+	Userid     string `json:"userid"`
 }
 
 type ListProjectsParams struct {
@@ -2085,6 +2124,15 @@ type ListProjectsResponse struct {
 }
 
 type Project struct {
+	Backupavailable           string              `json:"backupavailable"`
+	Backuplimit               string              `json:"backuplimit"`
+	Backupstorageavailable    string              `json:"backupstorageavailable"`
+	Backupstoragelimit        string              `json:"backupstoragelimit"`
+	Backupstoragetotal        int64               `json:"backupstoragetotal"`
+	Backuptotal               int64               `json:"backuptotal"`
+	Bucketavailable           string              `json:"bucketavailable"`
+	Bucketlimit               string              `json:"bucketlimit"`
+	Buckettotal               int64               `json:"buckettotal"`
 	Cpuavailable              string              `json:"cpuavailable"`
 	Cpulimit                  string              `json:"cpulimit"`
 	Cputotal                  int64               `json:"cputotal"`
@@ -2092,6 +2140,9 @@ type Project struct {
 	Displaytext               string              `json:"displaytext"`
 	Domain                    string              `json:"domain"`
 	Domainid                  string              `json:"domainid"`
+	Gpuavailable              string              `json:"gpuavailable"`
+	Gpulimit                  string              `json:"gpulimit"`
+	Gputotal                  int64               `json:"gputotal"`
 	Icon                      interface{}         `json:"icon"`
 	Id                        string              `json:"id"`
 	Ipavailable               string              `json:"ipavailable"`
@@ -2106,6 +2157,9 @@ type Project struct {
 	Networkavailable          string              `json:"networkavailable"`
 	Networklimit              string              `json:"networklimit"`
 	Networktotal              int64               `json:"networktotal"`
+	Objectstorageavailable    string              `json:"objectstorageavailable"`
+	Objectstoragelimit        string              `json:"objectstoragelimit"`
+	Objectstoragetotal        int64               `json:"objectstoragetotal"`
 	Owner                     []map[string]string `json:"owner"`
 	Primarystorageavailable   string              `json:"primarystorageavailable"`
 	Primarystoragelimit       string              `json:"primarystoragelimit"`
@@ -2118,6 +2172,7 @@ type Project struct {
 	Snapshotlimit             string              `json:"snapshotlimit"`
 	Snapshottotal             int64               `json:"snapshottotal"`
 	State                     string              `json:"state"`
+	Taggedresources           []string            `json:"taggedresources"`
 	Tags                      []Tags              `json:"tags"`
 	Templateavailable         string              `json:"templateavailable"`
 	Templatelimit             string              `json:"templatelimit"`
@@ -2182,7 +2237,7 @@ func (s *ProjectService) NewSuspendProjectParams(id string) *SuspendProjectParam
 
 // Suspends a project
 func (s *ProjectService) SuspendProject(p *SuspendProjectParams) (*SuspendProjectResponse, error) {
-	resp, err := s.cs.newRequest("suspendProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("suspendProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -2216,6 +2271,15 @@ func (s *ProjectService) SuspendProject(p *SuspendProjectParams) (*SuspendProjec
 }
 
 type SuspendProjectResponse struct {
+	Backupavailable           string              `json:"backupavailable"`
+	Backuplimit               string              `json:"backuplimit"`
+	Backupstorageavailable    string              `json:"backupstorageavailable"`
+	Backupstoragelimit        string              `json:"backupstoragelimit"`
+	Backupstoragetotal        int64               `json:"backupstoragetotal"`
+	Backuptotal               int64               `json:"backuptotal"`
+	Bucketavailable           string              `json:"bucketavailable"`
+	Bucketlimit               string              `json:"bucketlimit"`
+	Buckettotal               int64               `json:"buckettotal"`
 	Cpuavailable              string              `json:"cpuavailable"`
 	Cpulimit                  string              `json:"cpulimit"`
 	Cputotal                  int64               `json:"cputotal"`
@@ -2223,6 +2287,9 @@ type SuspendProjectResponse struct {
 	Displaytext               string              `json:"displaytext"`
 	Domain                    string              `json:"domain"`
 	Domainid                  string              `json:"domainid"`
+	Gpuavailable              string              `json:"gpuavailable"`
+	Gpulimit                  string              `json:"gpulimit"`
+	Gputotal                  int64               `json:"gputotal"`
 	Icon                      interface{}         `json:"icon"`
 	Id                        string              `json:"id"`
 	Ipavailable               string              `json:"ipavailable"`
@@ -2237,6 +2304,9 @@ type SuspendProjectResponse struct {
 	Networkavailable          string              `json:"networkavailable"`
 	Networklimit              string              `json:"networklimit"`
 	Networktotal              int64               `json:"networktotal"`
+	Objectstorageavailable    string              `json:"objectstorageavailable"`
+	Objectstoragelimit        string              `json:"objectstoragelimit"`
+	Objectstoragetotal        int64               `json:"objectstoragetotal"`
 	Owner                     []map[string]string `json:"owner"`
 	Primarystorageavailable   string              `json:"primarystorageavailable"`
 	Primarystoragelimit       string              `json:"primarystoragelimit"`
@@ -2249,6 +2319,7 @@ type SuspendProjectResponse struct {
 	Snapshotlimit             string              `json:"snapshotlimit"`
 	Snapshottotal             int64               `json:"snapshottotal"`
 	State                     string              `json:"state"`
+	Taggedresources           []string            `json:"taggedresources"`
 	Tags                      []Tags              `json:"tags"`
 	Templateavailable         string              `json:"templateavailable"`
 	Templatelimit             string              `json:"templatelimit"`
@@ -2458,7 +2529,7 @@ func (s *ProjectService) NewUpdateProjectParams(id string) *UpdateProjectParams 
 
 // Updates a project
 func (s *ProjectService) UpdateProject(p *UpdateProjectParams) (*UpdateProjectResponse, error) {
-	resp, err := s.cs.newRequest("updateProject", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateProject", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -2492,6 +2563,15 @@ func (s *ProjectService) UpdateProject(p *UpdateProjectParams) (*UpdateProjectRe
 }
 
 type UpdateProjectResponse struct {
+	Backupavailable           string              `json:"backupavailable"`
+	Backuplimit               string              `json:"backuplimit"`
+	Backupstorageavailable    string              `json:"backupstorageavailable"`
+	Backupstoragelimit        string              `json:"backupstoragelimit"`
+	Backupstoragetotal        int64               `json:"backupstoragetotal"`
+	Backuptotal               int64               `json:"backuptotal"`
+	Bucketavailable           string              `json:"bucketavailable"`
+	Bucketlimit               string              `json:"bucketlimit"`
+	Buckettotal               int64               `json:"buckettotal"`
 	Cpuavailable              string              `json:"cpuavailable"`
 	Cpulimit                  string              `json:"cpulimit"`
 	Cputotal                  int64               `json:"cputotal"`
@@ -2499,6 +2579,9 @@ type UpdateProjectResponse struct {
 	Displaytext               string              `json:"displaytext"`
 	Domain                    string              `json:"domain"`
 	Domainid                  string              `json:"domainid"`
+	Gpuavailable              string              `json:"gpuavailable"`
+	Gpulimit                  string              `json:"gpulimit"`
+	Gputotal                  int64               `json:"gputotal"`
 	Icon                      interface{}         `json:"icon"`
 	Id                        string              `json:"id"`
 	Ipavailable               string              `json:"ipavailable"`
@@ -2513,6 +2596,9 @@ type UpdateProjectResponse struct {
 	Networkavailable          string              `json:"networkavailable"`
 	Networklimit              string              `json:"networklimit"`
 	Networktotal              int64               `json:"networktotal"`
+	Objectstorageavailable    string              `json:"objectstorageavailable"`
+	Objectstoragelimit        string              `json:"objectstoragelimit"`
+	Objectstoragetotal        int64               `json:"objectstoragetotal"`
 	Owner                     []map[string]string `json:"owner"`
 	Primarystorageavailable   string              `json:"primarystorageavailable"`
 	Primarystoragelimit       string              `json:"primarystoragelimit"`
@@ -2525,6 +2611,7 @@ type UpdateProjectResponse struct {
 	Snapshotlimit             string              `json:"snapshotlimit"`
 	Snapshottotal             int64               `json:"snapshottotal"`
 	State                     string              `json:"state"`
+	Taggedresources           []string            `json:"taggedresources"`
 	Tags                      []Tags              `json:"tags"`
 	Templateavailable         string              `json:"templateavailable"`
 	Templatelimit             string              `json:"templatelimit"`
@@ -2686,7 +2773,7 @@ func (s *ProjectService) NewUpdateProjectInvitationParams(projectid string) *Upd
 
 // Accepts or declines project invitation
 func (s *ProjectService) UpdateProjectInvitation(p *UpdateProjectInvitationParams) (*UpdateProjectInvitationResponse, error) {
-	resp, err := s.cs.newRequest("updateProjectInvitation", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateProjectInvitation", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -2968,7 +3055,7 @@ func (s *ProjectService) NewCreateProjectRolePermissionParams(permission string,
 
 // Adds API permissions to a project role
 func (s *ProjectService) CreateProjectRolePermission(p *CreateProjectRolePermissionParams) (*CreateProjectRolePermissionResponse, error) {
-	resp, err := s.cs.newRequest("createProjectRolePermission", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createProjectRolePermission", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -3138,7 +3225,7 @@ func (s *ProjectService) NewUpdateProjectRolePermissionParams(projectid string, 
 
 // Updates a project role permission and/or order
 func (s *ProjectService) UpdateProjectRolePermission(p *UpdateProjectRolePermissionParams) (*UpdateProjectRolePermissionResponse, error) {
-	resp, err := s.cs.newRequest("updateProjectRolePermission", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateProjectRolePermission", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -3257,7 +3344,7 @@ func (s *ProjectService) NewDeleteProjectRolePermissionParams(id string, project
 
 // Deletes a project role permission in the project
 func (s *ProjectService) DeleteProjectRolePermission(p *DeleteProjectRolePermissionParams) (*DeleteProjectRolePermissionResponse, error) {
-	resp, err := s.cs.newRequest("deleteProjectRolePermission", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteProjectRolePermission", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -3301,5 +3388,392 @@ func (r *DeleteProjectRolePermissionResponse) UnmarshalJSON(b []byte) error {
 	}
 
 	type alias DeleteProjectRolePermissionResponse
+	return json.Unmarshal(b, (*alias)(r))
+}
+
+type CreateProjectRoleParams struct {
+	p map[string]interface{}
+}
+
+func (p *CreateProjectRoleParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["description"]; found {
+		u.Set("description", v.(string))
+	}
+	if v, found := p.p["name"]; found {
+		u.Set("name", v.(string))
+	}
+	if v, found := p.p["projectid"]; found {
+		u.Set("projectid", v.(string))
+	}
+	return u
+}
+
+func (p *CreateProjectRoleParams) SetDescription(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["description"] = v
+}
+
+func (p *CreateProjectRoleParams) ResetDescription() {
+	if p.p != nil && p.p["description"] != nil {
+		delete(p.p, "description")
+	}
+}
+
+func (p *CreateProjectRoleParams) GetDescription() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["description"].(string)
+	return value, ok
+}
+
+func (p *CreateProjectRoleParams) SetName(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["name"] = v
+}
+
+func (p *CreateProjectRoleParams) ResetName() {
+	if p.p != nil && p.p["name"] != nil {
+		delete(p.p, "name")
+	}
+}
+
+func (p *CreateProjectRoleParams) GetName() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["name"].(string)
+	return value, ok
+}
+
+func (p *CreateProjectRoleParams) SetProjectid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["projectid"] = v
+}
+
+func (p *CreateProjectRoleParams) ResetProjectid() {
+	if p.p != nil && p.p["projectid"] != nil {
+		delete(p.p, "projectid")
+	}
+}
+
+func (p *CreateProjectRoleParams) GetProjectid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["projectid"].(string)
+	return value, ok
+}
+
+// You should always use this function to get a new CreateProjectRoleParams instance,
+// as then you are sure you have configured all required params
+func (s *ProjectService) NewCreateProjectRoleParams(name string, projectid string) *CreateProjectRoleParams {
+	p := &CreateProjectRoleParams{}
+	p.p = make(map[string]interface{})
+	p.p["name"] = name
+	p.p["projectid"] = projectid
+	return p
+}
+
+// Creates a Project role
+func (s *ProjectService) CreateProjectRole(p *CreateProjectRoleParams) (*CreateProjectRoleResponse, error) {
+	resp, err := s.cs.newPostRequest("createProjectRole", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var nested struct {
+		Response CreateProjectRoleResponse `json:"projectrole"`
+	}
+	if err := json.Unmarshal(resp, &nested); err != nil {
+		return nil, err
+	}
+	r := nested.Response
+
+	return &r, nil
+}
+
+type CreateProjectRoleResponse struct {
+	Description string `json:"description"`
+	Id          string `json:"id"`
+	Ispublic    bool   `json:"ispublic"`
+	JobID       string `json:"jobid"`
+	Jobstatus   int    `json:"jobstatus"`
+	Name        string `json:"name"`
+	Projectid   string `json:"projectid"`
+}
+
+type UpdateProjectRoleParams struct {
+	p map[string]interface{}
+}
+
+func (p *UpdateProjectRoleParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["description"]; found {
+		u.Set("description", v.(string))
+	}
+	if v, found := p.p["id"]; found {
+		u.Set("id", v.(string))
+	}
+	if v, found := p.p["name"]; found {
+		u.Set("name", v.(string))
+	}
+	if v, found := p.p["projectid"]; found {
+		u.Set("projectid", v.(string))
+	}
+	return u
+}
+
+func (p *UpdateProjectRoleParams) SetDescription(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["description"] = v
+}
+
+func (p *UpdateProjectRoleParams) ResetDescription() {
+	if p.p != nil && p.p["description"] != nil {
+		delete(p.p, "description")
+	}
+}
+
+func (p *UpdateProjectRoleParams) GetDescription() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["description"].(string)
+	return value, ok
+}
+
+func (p *UpdateProjectRoleParams) SetId(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["id"] = v
+}
+
+func (p *UpdateProjectRoleParams) ResetId() {
+	if p.p != nil && p.p["id"] != nil {
+		delete(p.p, "id")
+	}
+}
+
+func (p *UpdateProjectRoleParams) GetId() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["id"].(string)
+	return value, ok
+}
+
+func (p *UpdateProjectRoleParams) SetName(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["name"] = v
+}
+
+func (p *UpdateProjectRoleParams) ResetName() {
+	if p.p != nil && p.p["name"] != nil {
+		delete(p.p, "name")
+	}
+}
+
+func (p *UpdateProjectRoleParams) GetName() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["name"].(string)
+	return value, ok
+}
+
+func (p *UpdateProjectRoleParams) SetProjectid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["projectid"] = v
+}
+
+func (p *UpdateProjectRoleParams) ResetProjectid() {
+	if p.p != nil && p.p["projectid"] != nil {
+		delete(p.p, "projectid")
+	}
+}
+
+func (p *UpdateProjectRoleParams) GetProjectid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["projectid"].(string)
+	return value, ok
+}
+
+// You should always use this function to get a new UpdateProjectRoleParams instance,
+// as then you are sure you have configured all required params
+func (s *ProjectService) NewUpdateProjectRoleParams(id string, projectid string) *UpdateProjectRoleParams {
+	p := &UpdateProjectRoleParams{}
+	p.p = make(map[string]interface{})
+	p.p["id"] = id
+	p.p["projectid"] = projectid
+	return p
+}
+
+// Creates a Project role
+func (s *ProjectService) UpdateProjectRole(p *UpdateProjectRoleParams) (*UpdateProjectRoleResponse, error) {
+	resp, err := s.cs.newPostRequest("updateProjectRole", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var nested struct {
+		Response UpdateProjectRoleResponse `json:"projectrole"`
+	}
+	if err := json.Unmarshal(resp, &nested); err != nil {
+		return nil, err
+	}
+	r := nested.Response
+
+	return &r, nil
+}
+
+type UpdateProjectRoleResponse struct {
+	Description string `json:"description"`
+	Id          string `json:"id"`
+	Ispublic    bool   `json:"ispublic"`
+	JobID       string `json:"jobid"`
+	Jobstatus   int    `json:"jobstatus"`
+	Name        string `json:"name"`
+	Projectid   string `json:"projectid"`
+}
+
+type DeleteProjectRoleParams struct {
+	p map[string]interface{}
+}
+
+func (p *DeleteProjectRoleParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["id"]; found {
+		u.Set("id", v.(string))
+	}
+	if v, found := p.p["projectid"]; found {
+		u.Set("projectid", v.(string))
+	}
+	return u
+}
+
+func (p *DeleteProjectRoleParams) SetId(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["id"] = v
+}
+
+func (p *DeleteProjectRoleParams) ResetId() {
+	if p.p != nil && p.p["id"] != nil {
+		delete(p.p, "id")
+	}
+}
+
+func (p *DeleteProjectRoleParams) GetId() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["id"].(string)
+	return value, ok
+}
+
+func (p *DeleteProjectRoleParams) SetProjectid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["projectid"] = v
+}
+
+func (p *DeleteProjectRoleParams) ResetProjectid() {
+	if p.p != nil && p.p["projectid"] != nil {
+		delete(p.p, "projectid")
+	}
+}
+
+func (p *DeleteProjectRoleParams) GetProjectid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["projectid"].(string)
+	return value, ok
+}
+
+// You should always use this function to get a new DeleteProjectRoleParams instance,
+// as then you are sure you have configured all required params
+func (s *ProjectService) NewDeleteProjectRoleParams(id string, projectid string) *DeleteProjectRoleParams {
+	p := &DeleteProjectRoleParams{}
+	p.p = make(map[string]interface{})
+	p.p["id"] = id
+	p.p["projectid"] = projectid
+	return p
+}
+
+// Delete Project roles in CloudStack
+func (s *ProjectService) DeleteProjectRole(p *DeleteProjectRoleParams) (*DeleteProjectRoleResponse, error) {
+	resp, err := s.cs.newPostRequest("deleteProjectRole", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var r DeleteProjectRoleResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return nil, err
+	}
+
+	return &r, nil
+}
+
+type DeleteProjectRoleResponse struct {
+	Displaytext string `json:"displaytext"`
+	JobID       string `json:"jobid"`
+	Jobstatus   int    `json:"jobstatus"`
+	Success     bool   `json:"success"`
+}
+
+func (r *DeleteProjectRoleResponse) UnmarshalJSON(b []byte) error {
+	var m map[string]interface{}
+	err := json.Unmarshal(b, &m)
+	if err != nil {
+		return err
+	}
+
+	if success, ok := m["success"].(string); ok {
+		m["success"] = success == "true"
+		b, err = json.Marshal(m)
+		if err != nil {
+			return err
+		}
+	}
+
+	if ostypeid, ok := m["ostypeid"].(float64); ok {
+		m["ostypeid"] = strconv.Itoa(int(ostypeid))
+		b, err = json.Marshal(m)
+		if err != nil {
+			return err
+		}
+	}
+
+	type alias DeleteProjectRoleResponse
 	return json.Unmarshal(b, (*alias)(r))
 }
