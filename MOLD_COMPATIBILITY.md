@@ -23,3 +23,9 @@ Mold ApiServer 계약에 따라 키를 정렬하고 값만 Java URLEncoder 방�
 `cloudstack/testdata/mold-signing.json`은 Provider SDK와 AutoScaler가 공유하는 고정 계약 벡터입니다. 인증정보는 테스트 전용 가짜 값입니다. 4.23 SDK의 생성 API를 포함하며 실제 Mold에서 제공되는 API/필드는 서버 지원 여부에 따라 결정됩니다.
 
 Origin의 `v2.19.2-mold-test.1`은 검증 후보입니다. 공식 배포 버전은 Upstream PR 병합 후 별도 릴리즈합니다.
+
+## 검증 대상
+
+이 SDK는 Mold의 HMAC-SHA256 계약을 사용합니다. Apache SHA1 simulator를 그대로 실행하는 inherited CI는 실제로 401을 반환하여 대상 프로토콜이 맞지 않으므로 제거합니다. 인증 알고리즘을 SHA1로 되돌리거나 fallback하지 않습니다.
+
+`.github/workflows/mold-sdk.yml`의 공통 독립 vector/GET·POST HTTP 계약 테스트, Build Check, RAT를 유지합니다. 31번 Mold 실서버의 SHA256·권한·키 회전/폐기·만료 검사 결과는 ISO 저장소의 검증 보고서와 #1228에 기록합니다. 원본 simulator의 전체 기능 integration coverage를 Mold에서 검증했다고 주장하지 않으며, 연속 integration은 전용 Mold 시험 환경이 필요합니다.
