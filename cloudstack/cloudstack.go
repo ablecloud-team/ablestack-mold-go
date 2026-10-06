@@ -589,20 +589,55 @@ func (cs *CloudStackClient) newRawRequest(api string, post bool, params url.Valu
 		return nil, err
 	}
 
-	// Need to get the raw value to make the result play nice
-	b, err = getRawValue(b)
-	if err != nil {
-		return nil, err
-	}
+	return decodeAPIResponse(api, resp.StatusCode, b)
+}
 
-	if resp.StatusCode != 200 {
+// decodeAPIResponse separates API failures from successful empty lists. Mold
+// may return an errorresponse with HTTP 200; that must never become a zero-value
+// list response (which controllers can interpret as a missing VM).
+func decodeAPIResponse(api string, status int, body json.RawMessage) (json.RawMessage, error) {
+	var envelope map[string]json.RawMessage
+	if err := json.Unmarshal(body, &envelope); err != nil {
+		return nil, fmt.Errorf("CloudStack %s HTTP %d: invalid JSON response: %w", api, status, err)
+	}
+	if len(envelope) == 0 {
+		return nil, fmt.Errorf("CloudStack %s HTTP %d: empty response envelope", api, status)
+	}
+	if failure, ok := envelope["errorresponse"]; ok {
 		var e CSError
-		if err := json.Unmarshal(b, &e); err != nil {
-			return nil, err
+		if err := json.Unmarshal(failure, &e); err != nil {
+			return nil, fmt.Errorf("CloudStack %s: invalid error response: %w", api, err)
 		}
 		return nil, e.Error()
 	}
-	return b, nil
+	// VM discovery must receive the command's envelope. Other commands retain
+	// legacy wrapper handling, including SDK asynchronous response fixtures.
+	if strings.EqualFold(api, "listVirtualMachines") {
+		if _, ok := envelope["listvirtualmachinesresponse"]; !ok || len(envelope) != 1 {
+			return nil, fmt.Errorf("CloudStack %s: unexpected response envelope", api)
+		}
+	}
+	payload, err := getRawValue(body)
+	if err != nil {
+		return nil, err
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(payload, &fields); err != nil || fields == nil {
+		return nil, fmt.Errorf("CloudStack %s HTTP %d: response payload must be an object", api, status)
+	}
+	var e CSError
+	if err := json.Unmarshal(payload, &e); err != nil {
+		return nil, fmt.Errorf("CloudStack %s: invalid response: %w", api, err)
+	}
+	_, hasErrorCode := fields["errorcode"]
+	_, hasErrorText := fields["errortext"]
+	if status != http.StatusOK || hasErrorCode || hasErrorText {
+		if e.ErrorCode == 0 && e.ErrorText == "" {
+			return nil, fmt.Errorf("CloudStack %s: HTTP %d", api, status)
+		}
+		return nil, e.Error()
+	}
+	return payload, nil
 }
 
 // Custom version of net/url Encode that only URL escapes values
