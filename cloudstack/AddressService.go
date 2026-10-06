@@ -444,6 +444,7 @@ func (s *AddressService) AssociateIpAddress(p *AssociateIpAddressParams) (*Assoc
 type AssociateIpAddressResponse struct {
 	Account                   string `json:"account"`
 	Allocated                 string `json:"allocated"`
+	Allocationgeneration      string `json:"allocationgeneration"`
 	Associatednetworkid       string `json:"associatednetworkid"`
 	Associatednetworkname     string `json:"associatednetworkname"`
 	Domain                    string `json:"domain"`
@@ -499,7 +500,33 @@ func (p *DisassociateIpAddressParams) toURLValues() url.Values {
 	if v, found := p.p["ipaddress"]; found {
 		u.Set("ipaddress", v.(string))
 	}
+	if v, found := p.p["expectedallocationgeneration"]; found {
+		u.Set("expectedallocationgeneration", v.(string))
+	}
 	return u
+}
+
+// SetExpectedallocationgeneration prevents releasing a reused public IP allocation.
+func (p *DisassociateIpAddressParams) SetExpectedallocationgeneration(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["expectedallocationgeneration"] = v
+}
+func (p *DisassociateIpAddressParams) GetExpectedallocationgeneration() (string, bool) {
+	if p.p == nil {
+		return "", false
+	}
+	v, found := p.p["expectedallocationgeneration"]
+	if !found {
+		return "", false
+	}
+	return v.(string), true
+}
+func (p *DisassociateIpAddressParams) ResetExpectedallocationgeneration() {
+	if p.p != nil {
+		delete(p.p, "expectedallocationgeneration")
+	}
 }
 
 func (p *DisassociateIpAddressParams) SetId(v string) {
@@ -1331,6 +1358,7 @@ type ListPublicIpAddressesResponse struct {
 type PublicIpAddress struct {
 	Account                   string `json:"account"`
 	Allocated                 string `json:"allocated"`
+	Allocationgeneration      string `json:"allocationgeneration"`
 	Associatednetworkid       string `json:"associatednetworkid"`
 	Associatednetworkname     string `json:"associatednetworkname"`
 	Domain                    string `json:"domain"`
@@ -1503,6 +1531,7 @@ func (s *AddressService) UpdateIpAddress(p *UpdateIpAddressParams) (*UpdateIpAdd
 type UpdateIpAddressResponse struct {
 	Account                   string `json:"account"`
 	Allocated                 string `json:"allocated"`
+	Allocationgeneration      string `json:"allocationgeneration"`
 	Associatednetworkid       string `json:"associatednetworkid"`
 	Associatednetworkname     string `json:"associatednetworkname"`
 	Domain                    string `json:"domain"`
@@ -1892,6 +1921,7 @@ func (s *AddressService) ReserveIpAddress(p *ReserveIpAddressParams) (*ReserveIp
 type ReserveIpAddressResponse struct {
 	Account                   string `json:"account"`
 	Allocated                 string `json:"allocated"`
+	Allocationgeneration      string `json:"allocationgeneration"`
 	Associatednetworkid       string `json:"associatednetworkid"`
 	Associatednetworkname     string `json:"associatednetworkname"`
 	Domain                    string `json:"domain"`
