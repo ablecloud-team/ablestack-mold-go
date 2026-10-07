@@ -194,28 +194,19 @@ func TestTemplateService(t *testing.T) {
 	}
 	t.Run("UpgradeRouterTemplate", testupgradeRouterTemplate)
 
-	testlistTemplateDirectDownloadCertificates := func(t *testing.T) {
-		if _, ok := response["listTemplateDirectDownloadCertificates"]; !ok {
+	testlinkUserDataToTemplate := func(t *testing.T) {
+		if _, ok := response["linkUserDataToTemplate"]; !ok {
 			t.Skipf("Skipping as no json response is provided in testdata")
 		}
-		p := client.Template.NewListTemplateDirectDownloadCertificatesParams()
-		_, err := client.Template.ListTemplateDirectDownloadCertificates(p)
+		p := client.Template.NewLinkUserDataToTemplateParams()
+		r, err := client.Template.LinkUserDataToTemplate(p)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
-	}
-	t.Run("ListTemplateDirectDownloadCertificates", testlistTemplateDirectDownloadCertificates)
-
-	testprovisionTemplateDirectDownloadCertificate := func(t *testing.T) {
-		if _, ok := response["provisionTemplateDirectDownloadCertificate"]; !ok {
-			t.Skipf("Skipping as no json response is provided in testdata")
-		}
-		p := client.Template.NewProvisionTemplateDirectDownloadCertificateParams("hostid", "id")
-		_, err := client.Template.ProvisionTemplateDirectDownloadCertificate(p)
-		if err != nil {
-			t.Errorf(err.Error())
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
 		}
 	}
-	t.Run("ProvisionTemplateDirectDownloadCertificate", testprovisionTemplateDirectDownloadCertificate)
+	t.Run("LinkUserDataToTemplate", testlinkUserDataToTemplate)
 
 }

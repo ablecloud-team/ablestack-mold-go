@@ -50,11 +50,18 @@ Last but not the least, there are a lot of helper functions that will try to aut
 The SDK relies on the `generate.go` script to auto generate the code for all the supported APIs listed in the `listApis.json` file.
 The `listAPIs.json` file holds the output of `listApis` command for a specific release of CloudStack.
 
+**_NOTE:_** This will only take into account enabled APIs, so only those accessible to the user doing the call at the time of the call. Non-Admin users may get less APIs in their list and even admin will not get APIs for services that are not enabled.
+
 ```
 # Run it via the Makefile
 make all
-
 ```
+
+### Prerequisites
+
+* `goimports`: Install by running `go install golang.org/x/tools/cmd/goimports@latest`
+
+* `mockgen`: Install by running `go install go.uber.org/mock/mockgen@latest`
 
 ## Getting Help
 

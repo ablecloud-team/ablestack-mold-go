@@ -101,6 +101,9 @@ func (p *CreateVlanIpRangeParams) toURLValues() url.Values {
 	if v, found := p.p["projectid"]; found {
 		u.Set("projectid", v.(string))
 	}
+	if v, found := p.p["provider"]; found {
+		u.Set("provider", v.(string))
+	}
 	if v, found := p.p["startip"]; found {
 		u.Set("startip", v.(string))
 	}
@@ -410,6 +413,27 @@ func (p *CreateVlanIpRangeParams) GetProjectid() (string, bool) {
 	return value, ok
 }
 
+func (p *CreateVlanIpRangeParams) SetProvider(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["provider"] = v
+}
+
+func (p *CreateVlanIpRangeParams) ResetProvider() {
+	if p.p != nil && p.p["provider"] != nil {
+		delete(p.p, "provider")
+	}
+}
+
+func (p *CreateVlanIpRangeParams) GetProvider() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["provider"].(string)
+	return value, ok
+}
+
 func (p *CreateVlanIpRangeParams) SetStartip(v string) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
@@ -504,7 +528,7 @@ func (s *VLANService) NewCreateVlanIpRangeParams() *CreateVlanIpRangeParams {
 
 // Creates a VLAN IP range.
 func (s *VLANService) CreateVlanIpRange(p *CreateVlanIpRangeParams) (*CreateVlanIpRangeResponse, error) {
-	resp, err := s.cs.newRequest("createVlanIpRange", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createVlanIpRange", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -527,6 +551,7 @@ type CreateVlanIpRangeResponse struct {
 	Description       string `json:"description"`
 	Domain            string `json:"domain"`
 	Domainid          string `json:"domainid"`
+	Domainpath        string `json:"domainpath"`
 	Endip             string `json:"endip"`
 	Endipv6           string `json:"endipv6"`
 	Forsystemvms      bool   `json:"forsystemvms"`
@@ -544,6 +569,7 @@ type CreateVlanIpRangeResponse struct {
 	Podname           string `json:"podname"`
 	Project           string `json:"project"`
 	Projectid         string `json:"projectid"`
+	Provider          string `json:"provider"`
 	Startip           string `json:"startip"`
 	Startipv6         string `json:"startipv6"`
 	Vlan              string `json:"vlan"`
@@ -694,7 +720,7 @@ func (s *VLANService) NewDedicateGuestVlanRangeParams(physicalnetworkid string, 
 
 // Dedicates a guest vlan range to an account
 func (s *VLANService) DedicateGuestVlanRange(p *DedicateGuestVlanRangeParams) (*DedicateGuestVlanRangeResponse, error) {
-	resp, err := s.cs.newRequest("dedicateGuestVlanRange", p.toURLValues())
+	resp, err := s.cs.newPostRequest("dedicateGuestVlanRange", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -715,6 +741,7 @@ type DedicateGuestVlanRangeResponse struct {
 	Account           string `json:"account"`
 	Domain            string `json:"domain"`
 	Domainid          string `json:"domainid"`
+	Domainpath        string `json:"domainpath"`
 	Guestvlanrange    string `json:"guestvlanrange"`
 	Id                string `json:"id"`
 	JobID             string `json:"jobid"`
@@ -770,9 +797,9 @@ func (s *VLANService) NewDeleteVlanIpRangeParams(id string) *DeleteVlanIpRangePa
 	return p
 }
 
-// Creates a VLAN IP range.
+// Deletes a VLAN IP range.
 func (s *VLANService) DeleteVlanIpRange(p *DeleteVlanIpRangeParams) (*DeleteVlanIpRangeResponse, error) {
-	resp, err := s.cs.newRequest("deleteVlanIpRange", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteVlanIpRange", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1138,6 +1165,7 @@ type DedicatedGuestVlanRange struct {
 	Account           string `json:"account"`
 	Domain            string `json:"domain"`
 	Domainid          string `json:"domainid"`
+	Domainpath        string `json:"domainpath"`
 	Guestvlanrange    string `json:"guestvlanrange"`
 	Id                string `json:"id"`
 	JobID             string `json:"jobid"`
@@ -1542,6 +1570,7 @@ type VlanIpRange struct {
 	Description       string `json:"description"`
 	Domain            string `json:"domain"`
 	Domainid          string `json:"domainid"`
+	Domainpath        string `json:"domainpath"`
 	Endip             string `json:"endip"`
 	Endipv6           string `json:"endipv6"`
 	Forsystemvms      bool   `json:"forsystemvms"`
@@ -1559,6 +1588,7 @@ type VlanIpRange struct {
 	Podname           string `json:"podname"`
 	Project           string `json:"project"`
 	Projectid         string `json:"projectid"`
+	Provider          string `json:"provider"`
 	Startip           string `json:"startip"`
 	Startipv6         string `json:"startipv6"`
 	Vlan              string `json:"vlan"`
@@ -1612,7 +1642,7 @@ func (s *VLANService) NewReleaseDedicatedGuestVlanRangeParams(id string) *Releas
 
 // Releases a dedicated guest vlan range to the system
 func (s *VLANService) ReleaseDedicatedGuestVlanRange(p *ReleaseDedicatedGuestVlanRangeParams) (*ReleaseDedicatedGuestVlanRangeResponse, error) {
-	resp, err := s.cs.newRequest("releaseDedicatedGuestVlanRange", p.toURLValues())
+	resp, err := s.cs.newPostRequest("releaseDedicatedGuestVlanRange", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1888,6 +1918,7 @@ type GuestVlan struct {
 	Allocationstate     string     `json:"allocationstate"`
 	Domain              string     `json:"domain"`
 	Domainid            string     `json:"domainid"`
+	Domainpath          string     `json:"domainpath"`
 	Id                  int64      `json:"id"`
 	Isdedicated         bool       `json:"isdedicated"`
 	JobID               string     `json:"jobid"`
@@ -2167,7 +2198,7 @@ func (s *VLANService) NewUpdateVlanIpRangeParams(id string) *UpdateVlanIpRangePa
 
 // Updates a VLAN IP range.
 func (s *VLANService) UpdateVlanIpRange(p *UpdateVlanIpRangeParams) (*UpdateVlanIpRangeResponse, error) {
-	resp, err := s.cs.newRequest("updateVlanIpRange", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateVlanIpRange", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -2190,6 +2221,7 @@ type UpdateVlanIpRangeResponse struct {
 	Description       string `json:"description"`
 	Domain            string `json:"domain"`
 	Domainid          string `json:"domainid"`
+	Domainpath        string `json:"domainpath"`
 	Endip             string `json:"endip"`
 	Endipv6           string `json:"endipv6"`
 	Forsystemvms      bool   `json:"forsystemvms"`
@@ -2207,6 +2239,7 @@ type UpdateVlanIpRangeResponse struct {
 	Podname           string `json:"podname"`
 	Project           string `json:"project"`
 	Projectid         string `json:"projectid"`
+	Provider          string `json:"provider"`
 	Startip           string `json:"startip"`
 	Startipv6         string `json:"startipv6"`
 	Vlan              string `json:"vlan"`

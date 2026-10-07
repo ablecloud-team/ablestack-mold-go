@@ -37,6 +37,11 @@ type SystemVMServiceIface interface {
 	GetSystemVmID(name string, opts ...OptionFunc) (string, int, error)
 	GetSystemVmByName(name string, opts ...OptionFunc) (*SystemVm, int, error)
 	GetSystemVmByID(id string, opts ...OptionFunc) (*SystemVm, int, error)
+	ListSystemVmsUsageHistory(p *ListSystemVmsUsageHistoryParams) (*ListSystemVmsUsageHistoryResponse, error)
+	NewListSystemVmsUsageHistoryParams() *ListSystemVmsUsageHistoryParams
+	GetSystemVmsUsageHistoryID(name string, opts ...OptionFunc) (string, int, error)
+	GetSystemVmsUsageHistoryByName(name string, opts ...OptionFunc) (*SystemVmsUsageHistory, int, error)
+	GetSystemVmsUsageHistoryByID(id string, opts ...OptionFunc) (*SystemVmsUsageHistory, int, error)
 	MigrateSystemVm(p *MigrateSystemVmParams) (*MigrateSystemVmResponse, error)
 	NewMigrateSystemVmParams(virtualmachineid string) *MigrateSystemVmParams
 	RebootSystemVm(p *RebootSystemVmParams) (*RebootSystemVmResponse, error)
@@ -150,7 +155,7 @@ func (s *SystemVMService) NewChangeServiceForSystemVmParams(id string, serviceof
 
 // Changes the service offering for a system vm (console proxy or secondary storage). The system vm must be in a "Stopped" state for this command to take effect.
 func (s *SystemVMService) ChangeServiceForSystemVm(p *ChangeServiceForSystemVmParams) (*ChangeServiceForSystemVmResponse, error) {
-	resp, err := s.cs.newRequest("changeServiceForSystemVm", p.toURLValues())
+	resp, err := s.cs.newPostRequest("changeServiceForSystemVm", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +171,7 @@ func (s *SystemVMService) ChangeServiceForSystemVm(p *ChangeServiceForSystemVmPa
 type ChangeServiceForSystemVmResponse struct {
 	Activeviewersessions  int      `json:"activeviewersessions"`
 	Agentstate            string   `json:"agentstate"`
+	Arch                  string   `json:"arch"`
 	Created               string   `json:"created"`
 	Disconnected          string   `json:"disconnected"`
 	Dns1                  string   `json:"dns1"`
@@ -251,9 +257,9 @@ func (s *SystemVMService) NewDestroySystemVmParams(id string) *DestroySystemVmPa
 	return p
 }
 
-// Destroys a system virtual machine.
+// Destroys a System VM.
 func (s *SystemVMService) DestroySystemVm(p *DestroySystemVmParams) (*DestroySystemVmResponse, error) {
-	resp, err := s.cs.newRequest("destroySystemVm", p.toURLValues())
+	resp, err := s.cs.newPostRequest("destroySystemVm", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -289,6 +295,7 @@ func (s *SystemVMService) DestroySystemVm(p *DestroySystemVmParams) (*DestroySys
 type DestroySystemVmResponse struct {
 	Activeviewersessions  int      `json:"activeviewersessions"`
 	Agentstate            string   `json:"agentstate"`
+	Arch                  string   `json:"arch"`
 	Created               string   `json:"created"`
 	Disconnected          string   `json:"disconnected"`
 	Dns1                  string   `json:"dns1"`
@@ -338,6 +345,9 @@ func (p *ListSystemVmsParams) toURLValues() url.Values {
 	if p.p == nil {
 		return u
 	}
+	if v, found := p.p["arch"]; found {
+		u.Set("arch", v.(string))
+	}
 	if v, found := p.p["hostid"]; found {
 		u.Set("hostid", v.(string))
 	}
@@ -374,6 +384,27 @@ func (p *ListSystemVmsParams) toURLValues() url.Values {
 		u.Set("zoneid", v.(string))
 	}
 	return u
+}
+
+func (p *ListSystemVmsParams) SetArch(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["arch"] = v
+}
+
+func (p *ListSystemVmsParams) ResetArch() {
+	if p.p != nil && p.p["arch"] != nil {
+		delete(p.p, "arch")
+	}
+}
+
+func (p *ListSystemVmsParams) GetArch() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["arch"].(string)
+	return value, ok
 }
 
 func (p *ListSystemVmsParams) SetHostid(v string) {
@@ -698,7 +729,7 @@ func (s *SystemVMService) GetSystemVmByID(id string, opts ...OptionFunc) (*Syste
 	return nil, l.Count, fmt.Errorf("There is more then one result for SystemVm UUID: %s!", id)
 }
 
-// List system virtual machines.
+// List System VMs.
 func (s *SystemVMService) ListSystemVms(p *ListSystemVmsParams) (*ListSystemVmsResponse, error) {
 	resp, err := s.cs.newRequest("listSystemVms", p.toURLValues())
 	if err != nil {
@@ -721,6 +752,7 @@ type ListSystemVmsResponse struct {
 type SystemVm struct {
 	Activeviewersessions  int      `json:"activeviewersessions"`
 	Agentstate            string   `json:"agentstate"`
+	Arch                  string   `json:"arch"`
 	Created               string   `json:"created"`
 	Disconnected          string   `json:"disconnected"`
 	Dns1                  string   `json:"dns1"`
@@ -759,6 +791,350 @@ type SystemVm struct {
 	Version               string   `json:"version"`
 	Zoneid                string   `json:"zoneid"`
 	Zonename              string   `json:"zonename"`
+}
+
+type ListSystemVmsUsageHistoryParams struct {
+	p map[string]interface{}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["enddate"]; found {
+		u.Set("enddate", v.(string))
+	}
+	if v, found := p.p["id"]; found {
+		u.Set("id", v.(string))
+	}
+	if v, found := p.p["ids"]; found {
+		vv := strings.Join(v.([]string), ",")
+		u.Set("ids", vv)
+	}
+	if v, found := p.p["keyword"]; found {
+		u.Set("keyword", v.(string))
+	}
+	if v, found := p.p["name"]; found {
+		u.Set("name", v.(string))
+	}
+	if v, found := p.p["page"]; found {
+		vv := strconv.Itoa(v.(int))
+		u.Set("page", vv)
+	}
+	if v, found := p.p["pagesize"]; found {
+		vv := strconv.Itoa(v.(int))
+		u.Set("pagesize", vv)
+	}
+	if v, found := p.p["startdate"]; found {
+		u.Set("startdate", v.(string))
+	}
+	return u
+}
+
+func (p *ListSystemVmsUsageHistoryParams) SetEnddate(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["enddate"] = v
+}
+
+func (p *ListSystemVmsUsageHistoryParams) ResetEnddate() {
+	if p.p != nil && p.p["enddate"] != nil {
+		delete(p.p, "enddate")
+	}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) GetEnddate() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["enddate"].(string)
+	return value, ok
+}
+
+func (p *ListSystemVmsUsageHistoryParams) SetId(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["id"] = v
+}
+
+func (p *ListSystemVmsUsageHistoryParams) ResetId() {
+	if p.p != nil && p.p["id"] != nil {
+		delete(p.p, "id")
+	}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) GetId() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["id"].(string)
+	return value, ok
+}
+
+func (p *ListSystemVmsUsageHistoryParams) SetIds(v []string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["ids"] = v
+}
+
+func (p *ListSystemVmsUsageHistoryParams) ResetIds() {
+	if p.p != nil && p.p["ids"] != nil {
+		delete(p.p, "ids")
+	}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) GetIds() ([]string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["ids"].([]string)
+	return value, ok
+}
+
+func (p *ListSystemVmsUsageHistoryParams) SetKeyword(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["keyword"] = v
+}
+
+func (p *ListSystemVmsUsageHistoryParams) ResetKeyword() {
+	if p.p != nil && p.p["keyword"] != nil {
+		delete(p.p, "keyword")
+	}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) GetKeyword() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["keyword"].(string)
+	return value, ok
+}
+
+func (p *ListSystemVmsUsageHistoryParams) SetName(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["name"] = v
+}
+
+func (p *ListSystemVmsUsageHistoryParams) ResetName() {
+	if p.p != nil && p.p["name"] != nil {
+		delete(p.p, "name")
+	}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) GetName() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["name"].(string)
+	return value, ok
+}
+
+func (p *ListSystemVmsUsageHistoryParams) SetPage(v int) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["page"] = v
+}
+
+func (p *ListSystemVmsUsageHistoryParams) ResetPage() {
+	if p.p != nil && p.p["page"] != nil {
+		delete(p.p, "page")
+	}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) GetPage() (int, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["page"].(int)
+	return value, ok
+}
+
+func (p *ListSystemVmsUsageHistoryParams) SetPagesize(v int) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["pagesize"] = v
+}
+
+func (p *ListSystemVmsUsageHistoryParams) ResetPagesize() {
+	if p.p != nil && p.p["pagesize"] != nil {
+		delete(p.p, "pagesize")
+	}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) GetPagesize() (int, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["pagesize"].(int)
+	return value, ok
+}
+
+func (p *ListSystemVmsUsageHistoryParams) SetStartdate(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["startdate"] = v
+}
+
+func (p *ListSystemVmsUsageHistoryParams) ResetStartdate() {
+	if p.p != nil && p.p["startdate"] != nil {
+		delete(p.p, "startdate")
+	}
+}
+
+func (p *ListSystemVmsUsageHistoryParams) GetStartdate() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["startdate"].(string)
+	return value, ok
+}
+
+// You should always use this function to get a new ListSystemVmsUsageHistoryParams instance,
+// as then you are sure you have configured all required params
+func (s *SystemVMService) NewListSystemVmsUsageHistoryParams() *ListSystemVmsUsageHistoryParams {
+	p := &ListSystemVmsUsageHistoryParams{}
+	p.p = make(map[string]interface{})
+	return p
+}
+
+// This is a courtesy helper function, which in some cases may not work as expected!
+func (s *SystemVMService) GetSystemVmsUsageHistoryID(name string, opts ...OptionFunc) (string, int, error) {
+	p := &ListSystemVmsUsageHistoryParams{}
+	p.p = make(map[string]interface{})
+
+	p.p["name"] = name
+
+	for _, fn := range append(s.cs.options, opts...) {
+		if err := fn(s.cs, p); err != nil {
+			return "", -1, err
+		}
+	}
+
+	l, err := s.ListSystemVmsUsageHistory(p)
+	if err != nil {
+		return "", -1, err
+	}
+
+	if l.Count == 0 {
+		return "", l.Count, fmt.Errorf("No match found for %s: %+v", name, l)
+	}
+
+	if l.Count == 1 {
+		return l.SystemVmsUsageHistory[0].Id, l.Count, nil
+	}
+
+	if l.Count > 1 {
+		for _, v := range l.SystemVmsUsageHistory {
+			if v.Name == name {
+				return v.Id, l.Count, nil
+			}
+		}
+	}
+	return "", l.Count, fmt.Errorf("Could not find an exact match for %s: %+v", name, l)
+}
+
+// This is a courtesy helper function, which in some cases may not work as expected!
+func (s *SystemVMService) GetSystemVmsUsageHistoryByName(name string, opts ...OptionFunc) (*SystemVmsUsageHistory, int, error) {
+	id, count, err := s.GetSystemVmsUsageHistoryID(name, opts...)
+	if err != nil {
+		return nil, count, err
+	}
+
+	r, count, err := s.GetSystemVmsUsageHistoryByID(id, opts...)
+	if err != nil {
+		return nil, count, err
+	}
+	return r, count, nil
+}
+
+// This is a courtesy helper function, which in some cases may not work as expected!
+func (s *SystemVMService) GetSystemVmsUsageHistoryByID(id string, opts ...OptionFunc) (*SystemVmsUsageHistory, int, error) {
+	p := &ListSystemVmsUsageHistoryParams{}
+	p.p = make(map[string]interface{})
+
+	p.p["id"] = id
+
+	for _, fn := range append(s.cs.options, opts...) {
+		if err := fn(s.cs, p); err != nil {
+			return nil, -1, err
+		}
+	}
+
+	l, err := s.ListSystemVmsUsageHistory(p)
+	if err != nil {
+		if strings.Contains(err.Error(), fmt.Sprintf(
+			"Invalid parameter id value=%s due to incorrect long value format, "+
+				"or entity does not exist", id)) {
+			return nil, 0, fmt.Errorf("No match found for %s: %+v", id, l)
+		}
+		return nil, -1, err
+	}
+
+	if l.Count == 0 {
+		return nil, l.Count, fmt.Errorf("No match found for %s: %+v", id, l)
+	}
+
+	if l.Count == 1 {
+		return l.SystemVmsUsageHistory[0], l.Count, nil
+	}
+	return nil, l.Count, fmt.Errorf("There is more then one result for SystemVmsUsageHistory UUID: %s!", id)
+}
+
+// Lists System VM stats
+func (s *SystemVMService) ListSystemVmsUsageHistory(p *ListSystemVmsUsageHistoryParams) (*ListSystemVmsUsageHistoryResponse, error) {
+	resp, err := s.cs.newRequest("listSystemVmsUsageHistory", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var r ListSystemVmsUsageHistoryResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return nil, err
+	}
+
+	return &r, nil
+}
+
+type ListSystemVmsUsageHistoryResponse struct {
+	Count                 int                      `json:"count"`
+	SystemVmsUsageHistory []*SystemVmsUsageHistory `json:"virtualmachine"`
+}
+
+type SystemVmsUsageHistory struct {
+	Displayname string                       `json:"displayname"`
+	Id          string                       `json:"id"`
+	JobID       string                       `json:"jobid"`
+	Jobstatus   int                          `json:"jobstatus"`
+	Name        string                       `json:"name"`
+	Stats       []SystemVmsUsageHistoryStats `json:"stats"`
+}
+
+type SystemVmsUsageHistoryStats struct {
+	Cpuused          string `json:"cpuused"`
+	Diskiopstotal    int64  `json:"diskiopstotal"`
+	Diskioread       int64  `json:"diskioread"`
+	Diskiowrite      int64  `json:"diskiowrite"`
+	Diskkbsread      int64  `json:"diskkbsread"`
+	Diskkbswrite     int64  `json:"diskkbswrite"`
+	Memoryintfreekbs int64  `json:"memoryintfreekbs"`
+	Memorykbs        int64  `json:"memorykbs"`
+	Memorytargetkbs  int64  `json:"memorytargetkbs"`
+	Networkkbsread   int64  `json:"networkkbsread"`
+	Networkkbswrite  int64  `json:"networkkbswrite"`
+	Networkread      string `json:"networkread"`
+	Networkwrite     string `json:"networkwrite"`
+	Timestamp        string `json:"timestamp"`
 }
 
 type MigrateSystemVmParams struct {
@@ -879,9 +1255,9 @@ func (s *SystemVMService) NewMigrateSystemVmParams(virtualmachineid string) *Mig
 	return p
 }
 
-// Attempts Migration of a system virtual machine to the host specified.
+// Attempts Migration of a System VM to the host specified.
 func (s *SystemVMService) MigrateSystemVm(p *MigrateSystemVmParams) (*MigrateSystemVmResponse, error) {
-	resp, err := s.cs.newRequest("migrateSystemVm", p.toURLValues())
+	resp, err := s.cs.newPostRequest("migrateSystemVm", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -917,6 +1293,7 @@ func (s *SystemVMService) MigrateSystemVm(p *MigrateSystemVmParams) (*MigrateSys
 type MigrateSystemVmResponse struct {
 	Activeviewersessions  int      `json:"activeviewersessions"`
 	Agentstate            string   `json:"agentstate"`
+	Arch                  string   `json:"arch"`
 	Created               string   `json:"created"`
 	Disconnected          string   `json:"disconnected"`
 	Dns1                  string   `json:"dns1"`
@@ -1029,7 +1406,7 @@ func (s *SystemVMService) NewRebootSystemVmParams(id string) *RebootSystemVmPara
 
 // Reboots a system VM.
 func (s *SystemVMService) RebootSystemVm(p *RebootSystemVmParams) (*RebootSystemVmResponse, error) {
-	resp, err := s.cs.newRequest("rebootSystemVm", p.toURLValues())
+	resp, err := s.cs.newPostRequest("rebootSystemVm", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1065,6 +1442,7 @@ func (s *SystemVMService) RebootSystemVm(p *RebootSystemVmParams) (*RebootSystem
 type RebootSystemVmResponse struct {
 	Activeviewersessions  int      `json:"activeviewersessions"`
 	Agentstate            string   `json:"agentstate"`
+	Arch                  string   `json:"arch"`
 	Created               string   `json:"created"`
 	Disconnected          string   `json:"disconnected"`
 	Dns1                  string   `json:"dns1"`
@@ -1204,7 +1582,7 @@ func (s *SystemVMService) NewScaleSystemVmParams(id string, serviceofferingid st
 
 // Scale the service offering for a system vm (console proxy or secondary storage). The system vm must be in a "Stopped" state for this command to take effect.
 func (s *SystemVMService) ScaleSystemVm(p *ScaleSystemVmParams) (*ScaleSystemVmResponse, error) {
-	resp, err := s.cs.newRequest("scaleSystemVm", p.toURLValues())
+	resp, err := s.cs.newPostRequest("scaleSystemVm", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1240,6 +1618,7 @@ func (s *SystemVMService) ScaleSystemVm(p *ScaleSystemVmParams) (*ScaleSystemVmR
 type ScaleSystemVmResponse struct {
 	Activeviewersessions  int      `json:"activeviewersessions"`
 	Agentstate            string   `json:"agentstate"`
+	Arch                  string   `json:"arch"`
 	Created               string   `json:"created"`
 	Disconnected          string   `json:"disconnected"`
 	Dns1                  string   `json:"dns1"`
@@ -1325,9 +1704,9 @@ func (s *SystemVMService) NewStartSystemVmParams(id string) *StartSystemVmParams
 	return p
 }
 
-// Starts a system virtual machine.
+// Starts a System VM.
 func (s *SystemVMService) StartSystemVm(p *StartSystemVmParams) (*StartSystemVmResponse, error) {
-	resp, err := s.cs.newRequest("startSystemVm", p.toURLValues())
+	resp, err := s.cs.newPostRequest("startSystemVm", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1363,6 +1742,7 @@ func (s *SystemVMService) StartSystemVm(p *StartSystemVmParams) (*StartSystemVmR
 type StartSystemVmResponse struct {
 	Activeviewersessions  int      `json:"activeviewersessions"`
 	Agentstate            string   `json:"agentstate"`
+	Arch                  string   `json:"arch"`
 	Created               string   `json:"created"`
 	Disconnected          string   `json:"disconnected"`
 	Dns1                  string   `json:"dns1"`
@@ -1475,7 +1855,7 @@ func (s *SystemVMService) NewStopSystemVmParams(id string) *StopSystemVmParams {
 
 // Stops a system VM.
 func (s *SystemVMService) StopSystemVm(p *StopSystemVmParams) (*StopSystemVmResponse, error) {
-	resp, err := s.cs.newRequest("stopSystemVm", p.toURLValues())
+	resp, err := s.cs.newPostRequest("stopSystemVm", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1511,6 +1891,7 @@ func (s *SystemVMService) StopSystemVm(p *StopSystemVmParams) (*StopSystemVmResp
 type StopSystemVmResponse struct {
 	Activeviewersessions  int      `json:"activeviewersessions"`
 	Agentstate            string   `json:"agentstate"`
+	Arch                  string   `json:"arch"`
 	Created               string   `json:"created"`
 	Disconnected          string   `json:"disconnected"`
 	Dns1                  string   `json:"dns1"`
@@ -1622,7 +2003,7 @@ func (s *SystemVMService) NewPatchSystemVmParams() *PatchSystemVmParams {
 
 // Attempts to live patch systemVMs - CPVM, SSVM
 func (s *SystemVMService) PatchSystemVm(p *PatchSystemVmParams) (*PatchSystemVmResponse, error) {
-	resp, err := s.cs.newRequest("patchSystemVm", p.toURLValues())
+	resp, err := s.cs.newPostRequest("patchSystemVm", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}

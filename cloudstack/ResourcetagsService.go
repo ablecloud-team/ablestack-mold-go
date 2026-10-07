@@ -165,7 +165,7 @@ func (s *ResourcetagsService) NewCreateTagsParams(resourceids []string, resource
 
 // Creates resource tag(s)
 func (s *ResourcetagsService) CreateTags(p *CreateTagsParams) (*CreateTagsResponse, error) {
-	resp, err := s.cs.newRequest("createTags", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createTags", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func (s *ResourcetagsService) NewDeleteTagsParams(resourceids []string, resource
 
 // Deleting resource tag(s)
 func (s *ResourcetagsService) DeleteTags(p *DeleteTagsParams) (*DeleteTagsResponse, error) {
-	resp, err := s.cs.newRequest("deleteTags", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteTags", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -857,6 +857,7 @@ type Tag struct {
 	Customer     string `json:"customer"`
 	Domain       string `json:"domain"`
 	Domainid     string `json:"domainid"`
+	Domainpath   string `json:"domainpath"`
 	JobID        string `json:"jobid"`
 	Jobstatus    int    `json:"jobstatus"`
 	Key          string `json:"key"`

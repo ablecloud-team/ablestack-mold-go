@@ -131,6 +131,18 @@ func TestUserService(t *testing.T) {
 	}
 	t.Run("GetVirtualMachineUserData", testgetVirtualMachineUserData)
 
+	testlistUserTwoFactorAuthenticatorProviders := func(t *testing.T) {
+		if _, ok := response["listUserTwoFactorAuthenticatorProviders"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.User.NewListUserTwoFactorAuthenticatorProvidersParams()
+		_, err := client.User.ListUserTwoFactorAuthenticatorProviders(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ListUserTwoFactorAuthenticatorProviders", testlistUserTwoFactorAuthenticatorProviders)
+
 	testlistUsers := func(t *testing.T) {
 		if _, ok := response["listUsers"]; !ok {
 			t.Skipf("Skipping as no json response is provided in testdata")
@@ -184,5 +196,95 @@ func TestUserService(t *testing.T) {
 		}
 	}
 	t.Run("UpdateUser", testupdateUser)
+
+	testlistUserData := func(t *testing.T) {
+		if _, ok := response["listUserData"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.User.NewListUserDataParams()
+		_, err := client.User.ListUserData(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ListUserData", testlistUserData)
+
+	testdeleteUserData := func(t *testing.T) {
+		if _, ok := response["deleteUserData"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.User.NewDeleteUserDataParams("id")
+		_, err := client.User.DeleteUserData(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("DeleteUserData", testdeleteUserData)
+
+	testregisterUserData := func(t *testing.T) {
+		if _, ok := response["registerUserData"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.User.NewRegisterUserDataParams("name", "userdata")
+		_, err := client.User.RegisterUserData(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("RegisterUserData", testregisterUserData)
+
+	testmoveUser := func(t *testing.T) {
+		if _, ok := response["moveUser"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.User.NewMoveUserParams("id")
+		_, err := client.User.MoveUser(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("MoveUser", testmoveUser)
+
+	testsetupUserTwoFactorAuthentication := func(t *testing.T) {
+		if _, ok := response["setupUserTwoFactorAuthentication"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.User.NewSetupUserTwoFactorAuthenticationParams()
+		r, err := client.User.SetupUserTwoFactorAuthentication(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("SetupUserTwoFactorAuthentication", testsetupUserTwoFactorAuthentication)
+
+	testvalidateUserTwoFactorAuthenticationCode := func(t *testing.T) {
+		if _, ok := response["validateUserTwoFactorAuthenticationCode"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.User.NewValidateUserTwoFactorAuthenticationCodeParams("codefor2fa")
+		_, err := client.User.ValidateUserTwoFactorAuthenticationCode(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ValidateUserTwoFactorAuthenticationCode", testvalidateUserTwoFactorAuthenticationCode)
+
+	testverifyOAuthCodeAndGetUser := func(t *testing.T) {
+		if _, ok := response["verifyOAuthCodeAndGetUser"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.User.NewVerifyOAuthCodeAndGetUserParams("provider")
+		r, err := client.User.VerifyOAuthCodeAndGetUser(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("VerifyOAuthCodeAndGetUser", testverifyOAuthCodeAndGetUser)
 
 }

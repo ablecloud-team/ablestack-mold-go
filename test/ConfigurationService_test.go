@@ -47,6 +47,18 @@ func TestConfigurationService(t *testing.T) {
 	}
 	t.Run("ListCapabilities", testlistCapabilities)
 
+	testlistConfigurationGroups := func(t *testing.T) {
+		if _, ok := response["listConfigurationGroups"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.Configuration.NewListConfigurationGroupsParams()
+		_, err := client.Configuration.ListConfigurationGroups(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ListConfigurationGroups", testlistConfigurationGroups)
+
 	testlistConfigurations := func(t *testing.T) {
 		if _, ok := response["listConfigurations"]; !ok {
 			t.Skipf("Skipping as no json response is provided in testdata")
@@ -94,5 +106,56 @@ func TestConfigurationService(t *testing.T) {
 		}
 	}
 	t.Run("ResetConfiguration", testresetConfiguration)
+
+	testupdateStorageCapabilities := func(t *testing.T) {
+		if _, ok := response["updateStorageCapabilities"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.Configuration.NewUpdateStorageCapabilitiesParams("id")
+		r, err := client.Configuration.UpdateStorageCapabilities(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("UpdateStorageCapabilities", testupdateStorageCapabilities)
+
+	testregisterCniConfiguration := func(t *testing.T) {
+		if _, ok := response["registerCniConfiguration"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.Configuration.NewRegisterCniConfigurationParams("name")
+		_, err := client.Configuration.RegisterCniConfiguration(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("RegisterCniConfiguration", testregisterCniConfiguration)
+
+	testlistCniConfiguration := func(t *testing.T) {
+		if _, ok := response["listCniConfiguration"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.Configuration.NewListCniConfigurationParams()
+		_, err := client.Configuration.ListCniConfiguration(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("ListCniConfiguration", testlistCniConfiguration)
+
+	testdeleteCniConfiguration := func(t *testing.T) {
+		if _, ok := response["deleteCniConfiguration"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.Configuration.NewDeleteCniConfigurationParams("id")
+		_, err := client.Configuration.DeleteCniConfiguration(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+	t.Run("DeleteCniConfiguration", testdeleteCniConfiguration)
 
 }

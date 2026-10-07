@@ -79,6 +79,8 @@ type AutoScaleServiceIface interface {
 	NewUpdateAutoScaleVmGroupParams(id string) *UpdateAutoScaleVmGroupParams
 	UpdateAutoScaleVmProfile(p *UpdateAutoScaleVmProfileParams) (*UpdateAutoScaleVmProfileResponse, error)
 	NewUpdateAutoScaleVmProfileParams(id string) *UpdateAutoScaleVmProfileParams
+	UpdateCondition(p *UpdateConditionParams) (*UpdateConditionResponse, error)
+	NewUpdateConditionParams(id string, relationaloperator string, threshold int64) *UpdateConditionParams
 }
 
 type CreateAutoScalePolicyParams struct {
@@ -227,9 +229,9 @@ func (s *AutoScaleService) NewCreateAutoScalePolicyParams(action string, conditi
 	return p
 }
 
-// Creates an autoscale policy for a provision or deprovision action, the action is taken when the all the conditions evaluates to true for the specified duration. The policy is in effect once it is attached to a autscale vm group.
+// Creates an autoscale policy for a provision or deprovision action, the action is taken when the all the conditions evaluates to true for the specified duration. The policy is in effect once it is attached to a autscale Instance group.
 func (s *AutoScaleService) CreateAutoScalePolicy(p *CreateAutoScalePolicyParams) (*CreateAutoScalePolicyResponse, error) {
-	resp, err := s.cs.newRequest("createAutoScalePolicy", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createAutoScalePolicy", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -263,19 +265,20 @@ func (s *AutoScaleService) CreateAutoScalePolicy(p *CreateAutoScalePolicyParams)
 }
 
 type CreateAutoScalePolicyResponse struct {
-	Account    string   `json:"account"`
-	Action     string   `json:"action"`
-	Conditions []string `json:"conditions"`
-	Domain     string   `json:"domain"`
-	Domainid   string   `json:"domainid"`
-	Duration   int      `json:"duration"`
-	Id         string   `json:"id"`
-	JobID      string   `json:"jobid"`
-	Jobstatus  int      `json:"jobstatus"`
-	Name       string   `json:"name"`
-	Project    string   `json:"project"`
-	Projectid  string   `json:"projectid"`
-	Quiettime  int      `json:"quiettime"`
+	Account    string       `json:"account"`
+	Action     string       `json:"action"`
+	Conditions []*Condition `json:"conditions"`
+	Domain     string       `json:"domain"`
+	Domainid   string       `json:"domainid"`
+	Domainpath string       `json:"domainpath"`
+	Duration   int          `json:"duration"`
+	Id         string       `json:"id"`
+	JobID      string       `json:"jobid"`
+	Jobstatus  int          `json:"jobstatus"`
+	Name       string       `json:"name"`
+	Project    string       `json:"project"`
+	Projectid  string       `json:"projectid"`
+	Quiettime  int          `json:"quiettime"`
 }
 
 type CreateAutoScaleVmGroupParams struct {
@@ -526,9 +529,9 @@ func (s *AutoScaleService) NewCreateAutoScaleVmGroupParams(lbruleid string, maxm
 	return p
 }
 
-// Creates and automatically starts a virtual machine based on a service offering, disk offering, and template.
+// Creates and automatically starts an Instance based on a service offering, disk offering, and Template.
 func (s *AutoScaleService) CreateAutoScaleVmGroup(p *CreateAutoScaleVmGroupParams) (*CreateAutoScaleVmGroupResponse, error) {
-	resp, err := s.cs.newRequest("createAutoScaleVmGroup", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createAutoScaleVmGroup", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -562,34 +565,35 @@ func (s *AutoScaleService) CreateAutoScaleVmGroup(p *CreateAutoScaleVmGroupParam
 }
 
 type CreateAutoScaleVmGroupResponse struct {
-	Account                      string   `json:"account"`
-	Associatednetworkid          string   `json:"associatednetworkid"`
-	Associatednetworkname        string   `json:"associatednetworkname"`
-	Availablevirtualmachinecount int      `json:"availablevirtualmachinecount"`
-	Created                      string   `json:"created"`
-	Domain                       string   `json:"domain"`
-	Domainid                     string   `json:"domainid"`
-	Fordisplay                   bool     `json:"fordisplay"`
-	Hasannotations               bool     `json:"hasannotations"`
-	Id                           string   `json:"id"`
-	Interval                     int      `json:"interval"`
-	JobID                        string   `json:"jobid"`
-	Jobstatus                    int      `json:"jobstatus"`
-	Lbprovider                   string   `json:"lbprovider"`
-	Lbruleid                     string   `json:"lbruleid"`
-	Maxmembers                   int      `json:"maxmembers"`
-	Minmembers                   int      `json:"minmembers"`
-	Name                         string   `json:"name"`
-	Privateport                  string   `json:"privateport"`
-	Project                      string   `json:"project"`
-	Projectid                    string   `json:"projectid"`
-	Publicip                     string   `json:"publicip"`
-	Publicipid                   string   `json:"publicipid"`
-	Publicport                   string   `json:"publicport"`
-	Scaledownpolicies            []string `json:"scaledownpolicies"`
-	Scaleuppolicies              []string `json:"scaleuppolicies"`
-	State                        string   `json:"state"`
-	Vmprofileid                  string   `json:"vmprofileid"`
+	Account                      string             `json:"account"`
+	Associatednetworkid          string             `json:"associatednetworkid"`
+	Associatednetworkname        string             `json:"associatednetworkname"`
+	Availablevirtualmachinecount int                `json:"availablevirtualmachinecount"`
+	Created                      string             `json:"created"`
+	Domain                       string             `json:"domain"`
+	Domainid                     string             `json:"domainid"`
+	Domainpath                   string             `json:"domainpath"`
+	Fordisplay                   bool               `json:"fordisplay"`
+	Hasannotations               bool               `json:"hasannotations"`
+	Id                           string             `json:"id"`
+	Interval                     int                `json:"interval"`
+	JobID                        string             `json:"jobid"`
+	Jobstatus                    int                `json:"jobstatus"`
+	Lbprovider                   string             `json:"lbprovider"`
+	Lbruleid                     string             `json:"lbruleid"`
+	Maxmembers                   int                `json:"maxmembers"`
+	Minmembers                   int                `json:"minmembers"`
+	Name                         string             `json:"name"`
+	Privateport                  string             `json:"privateport"`
+	Project                      string             `json:"project"`
+	Projectid                    string             `json:"projectid"`
+	Publicip                     string             `json:"publicip"`
+	Publicipid                   string             `json:"publicipid"`
+	Publicport                   string             `json:"publicport"`
+	Scaledownpolicies            []*AutoScalePolicy `json:"scaledownpolicies"`
+	Scaleuppolicies              []*AutoScalePolicy `json:"scaleuppolicies"`
+	State                        string             `json:"state"`
+	Vmprofileid                  string             `json:"vmprofileid"`
 }
 
 type CreateAutoScaleVmProfileParams struct {
@@ -628,7 +632,7 @@ func (p *CreateAutoScaleVmProfileParams) toURLValues() url.Values {
 	if v, found := p.p["otherdeployparams"]; found {
 		m := v.(map[string]string)
 		for i, k := range getSortedKeysFromMap(m) {
-			u.Set(fmt.Sprintf("otherdeployparams[%d].key", i), k)
+			u.Set(fmt.Sprintf("otherdeployparams[%d].name", i), k)
 			u.Set(fmt.Sprintf("otherdeployparams[%d].value", i), m[k])
 		}
 	}
@@ -647,8 +651,7 @@ func (p *CreateAutoScaleVmProfileParams) toURLValues() url.Values {
 	if v, found := p.p["userdatadetails"]; found {
 		m := v.(map[string]string)
 		for i, k := range getSortedKeysFromMap(m) {
-			u.Set(fmt.Sprintf("userdatadetails[%d].key", i), k)
-			u.Set(fmt.Sprintf("userdatadetails[%d].value", i), m[k])
+			u.Set(fmt.Sprintf("userdatadetails[%d].%s", i, k), m[k])
 		}
 	}
 	if v, found := p.p["userdataid"]; found {
@@ -965,9 +968,9 @@ func (s *AutoScaleService) NewCreateAutoScaleVmProfileParams(serviceofferingid s
 	return p
 }
 
-// Creates a profile that contains information about the virtual machine which will be provisioned automatically by autoscale feature.
+// Creates a profile that contains information about the Instance which will be provisioned automatically by autoscale feature.
 func (s *AutoScaleService) CreateAutoScaleVmProfile(p *CreateAutoScaleVmProfileParams) (*CreateAutoScaleVmProfileResponse, error) {
-	resp, err := s.cs.newRequest("createAutoScaleVmProfile", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createAutoScaleVmProfile", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1005,6 +1008,7 @@ type CreateAutoScaleVmProfileResponse struct {
 	Autoscaleuserid      string            `json:"autoscaleuserid"`
 	Domain               string            `json:"domain"`
 	Domainid             string            `json:"domainid"`
+	Domainpath           string            `json:"domainpath"`
 	Expungevmgraceperiod int               `json:"expungevmgraceperiod"`
 	Fordisplay           bool              `json:"fordisplay"`
 	Id                   string            `json:"id"`
@@ -1191,9 +1195,9 @@ func (s *AutoScaleService) NewCreateConditionParams(counterid string, relational
 	return p
 }
 
-// Creates a condition for VM auto scaling
+// Creates a condition for Instance auto scaling
 func (s *AutoScaleService) CreateCondition(p *CreateConditionParams) (*CreateConditionResponse, error) {
-	resp, err := s.cs.newRequest("createCondition", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createCondition", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1227,20 +1231,21 @@ func (s *AutoScaleService) CreateCondition(p *CreateConditionParams) (*CreateCon
 }
 
 type CreateConditionResponse struct {
-	Account            string `json:"account"`
-	Counter            string `json:"counter"`
-	Counterid          string `json:"counterid"`
-	Countername        string `json:"countername"`
-	Domain             string `json:"domain"`
-	Domainid           string `json:"domainid"`
-	Id                 string `json:"id"`
-	JobID              string `json:"jobid"`
-	Jobstatus          int    `json:"jobstatus"`
-	Project            string `json:"project"`
-	Projectid          string `json:"projectid"`
-	Relationaloperator string `json:"relationaloperator"`
-	Threshold          int64  `json:"threshold"`
-	Zoneid             string `json:"zoneid"`
+	Account            string   `json:"account"`
+	Counter            *Counter `json:"counter"`
+	Counterid          string   `json:"counterid"`
+	Countername        string   `json:"countername"`
+	Domain             string   `json:"domain"`
+	Domainid           string   `json:"domainid"`
+	Domainpath         string   `json:"domainpath"`
+	Id                 string   `json:"id"`
+	JobID              string   `json:"jobid"`
+	Jobstatus          int      `json:"jobstatus"`
+	Project            string   `json:"project"`
+	Projectid          string   `json:"projectid"`
+	Relationaloperator string   `json:"relationaloperator"`
+	Threshold          int64    `json:"threshold"`
+	Zoneid             string   `json:"zoneid"`
 }
 
 type CreateCounterParams struct {
@@ -1363,9 +1368,9 @@ func (s *AutoScaleService) NewCreateCounterParams(name string, provider string, 
 	return p
 }
 
-// Adds metric counter for VM auto scaling
+// Adds metric counter for Instance auto scaling
 func (s *AutoScaleService) CreateCounter(p *CreateCounterParams) (*CreateCounterResponse, error) {
-	resp, err := s.cs.newRequest("createCounter", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createCounter", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1456,7 +1461,7 @@ func (s *AutoScaleService) NewDeleteAutoScalePolicyParams(id string) *DeleteAuto
 
 // Deletes a autoscale policy.
 func (s *AutoScaleService) DeleteAutoScalePolicy(p *DeleteAutoScalePolicyParams) (*DeleteAutoScalePolicyResponse, error) {
-	resp, err := s.cs.newRequest("deleteAutoScalePolicy", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteAutoScalePolicy", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1561,9 +1566,9 @@ func (s *AutoScaleService) NewDeleteAutoScaleVmGroupParams(id string) *DeleteAut
 	return p
 }
 
-// Deletes a autoscale vm group.
+// Deletes an autoscale Instance group.
 func (s *AutoScaleService) DeleteAutoScaleVmGroup(p *DeleteAutoScaleVmGroupParams) (*DeleteAutoScaleVmGroupResponse, error) {
-	resp, err := s.cs.newRequest("deleteAutoScaleVmGroup", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteAutoScaleVmGroup", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1643,9 +1648,9 @@ func (s *AutoScaleService) NewDeleteAutoScaleVmProfileParams(id string) *DeleteA
 	return p
 }
 
-// Deletes a autoscale vm profile.
+// Deletes a autoscale Instance profile.
 func (s *AutoScaleService) DeleteAutoScaleVmProfile(p *DeleteAutoScaleVmProfileParams) (*DeleteAutoScaleVmProfileResponse, error) {
-	resp, err := s.cs.newRequest("deleteAutoScaleVmProfile", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteAutoScaleVmProfile", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1725,9 +1730,9 @@ func (s *AutoScaleService) NewDeleteConditionParams(id string) *DeleteConditionP
 	return p
 }
 
-// Removes a condition for VM auto scaling
+// Removes a condition for Instance auto scaling
 func (s *AutoScaleService) DeleteCondition(p *DeleteConditionParams) (*DeleteConditionResponse, error) {
-	resp, err := s.cs.newRequest("deleteCondition", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteCondition", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1807,9 +1812,9 @@ func (s *AutoScaleService) NewDeleteCounterParams(id string) *DeleteCounterParam
 	return p
 }
 
-// Deletes a counter for VM auto scaling
+// Deletes a counter for Instance auto scaling
 func (s *AutoScaleService) DeleteCounter(p *DeleteCounterParams) (*DeleteCounterResponse, error) {
-	resp, err := s.cs.newRequest("deleteCounter", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteCounter", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1889,9 +1894,9 @@ func (s *AutoScaleService) NewDisableAutoScaleVmGroupParams(id string) *DisableA
 	return p
 }
 
-// Disables an AutoScale Vm Group
+// Disables an AutoScale Instance Group
 func (s *AutoScaleService) DisableAutoScaleVmGroup(p *DisableAutoScaleVmGroupParams) (*DisableAutoScaleVmGroupResponse, error) {
-	resp, err := s.cs.newRequest("disableAutoScaleVmGroup", p.toURLValues())
+	resp, err := s.cs.newPostRequest("disableAutoScaleVmGroup", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1925,34 +1930,35 @@ func (s *AutoScaleService) DisableAutoScaleVmGroup(p *DisableAutoScaleVmGroupPar
 }
 
 type DisableAutoScaleVmGroupResponse struct {
-	Account                      string   `json:"account"`
-	Associatednetworkid          string   `json:"associatednetworkid"`
-	Associatednetworkname        string   `json:"associatednetworkname"`
-	Availablevirtualmachinecount int      `json:"availablevirtualmachinecount"`
-	Created                      string   `json:"created"`
-	Domain                       string   `json:"domain"`
-	Domainid                     string   `json:"domainid"`
-	Fordisplay                   bool     `json:"fordisplay"`
-	Hasannotations               bool     `json:"hasannotations"`
-	Id                           string   `json:"id"`
-	Interval                     int      `json:"interval"`
-	JobID                        string   `json:"jobid"`
-	Jobstatus                    int      `json:"jobstatus"`
-	Lbprovider                   string   `json:"lbprovider"`
-	Lbruleid                     string   `json:"lbruleid"`
-	Maxmembers                   int      `json:"maxmembers"`
-	Minmembers                   int      `json:"minmembers"`
-	Name                         string   `json:"name"`
-	Privateport                  string   `json:"privateport"`
-	Project                      string   `json:"project"`
-	Projectid                    string   `json:"projectid"`
-	Publicip                     string   `json:"publicip"`
-	Publicipid                   string   `json:"publicipid"`
-	Publicport                   string   `json:"publicport"`
-	Scaledownpolicies            []string `json:"scaledownpolicies"`
-	Scaleuppolicies              []string `json:"scaleuppolicies"`
-	State                        string   `json:"state"`
-	Vmprofileid                  string   `json:"vmprofileid"`
+	Account                      string             `json:"account"`
+	Associatednetworkid          string             `json:"associatednetworkid"`
+	Associatednetworkname        string             `json:"associatednetworkname"`
+	Availablevirtualmachinecount int                `json:"availablevirtualmachinecount"`
+	Created                      string             `json:"created"`
+	Domain                       string             `json:"domain"`
+	Domainid                     string             `json:"domainid"`
+	Domainpath                   string             `json:"domainpath"`
+	Fordisplay                   bool               `json:"fordisplay"`
+	Hasannotations               bool               `json:"hasannotations"`
+	Id                           string             `json:"id"`
+	Interval                     int                `json:"interval"`
+	JobID                        string             `json:"jobid"`
+	Jobstatus                    int                `json:"jobstatus"`
+	Lbprovider                   string             `json:"lbprovider"`
+	Lbruleid                     string             `json:"lbruleid"`
+	Maxmembers                   int                `json:"maxmembers"`
+	Minmembers                   int                `json:"minmembers"`
+	Name                         string             `json:"name"`
+	Privateport                  string             `json:"privateport"`
+	Project                      string             `json:"project"`
+	Projectid                    string             `json:"projectid"`
+	Publicip                     string             `json:"publicip"`
+	Publicipid                   string             `json:"publicipid"`
+	Publicport                   string             `json:"publicport"`
+	Scaledownpolicies            []*AutoScalePolicy `json:"scaledownpolicies"`
+	Scaleuppolicies              []*AutoScalePolicy `json:"scaleuppolicies"`
+	State                        string             `json:"state"`
+	Vmprofileid                  string             `json:"vmprofileid"`
 }
 
 type EnableAutoScaleVmGroupParams struct {
@@ -2000,9 +2006,9 @@ func (s *AutoScaleService) NewEnableAutoScaleVmGroupParams(id string) *EnableAut
 	return p
 }
 
-// Enables an AutoScale Vm Group
+// Enables an AutoScale Instance Group
 func (s *AutoScaleService) EnableAutoScaleVmGroup(p *EnableAutoScaleVmGroupParams) (*EnableAutoScaleVmGroupResponse, error) {
-	resp, err := s.cs.newRequest("enableAutoScaleVmGroup", p.toURLValues())
+	resp, err := s.cs.newPostRequest("enableAutoScaleVmGroup", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -2036,34 +2042,35 @@ func (s *AutoScaleService) EnableAutoScaleVmGroup(p *EnableAutoScaleVmGroupParam
 }
 
 type EnableAutoScaleVmGroupResponse struct {
-	Account                      string   `json:"account"`
-	Associatednetworkid          string   `json:"associatednetworkid"`
-	Associatednetworkname        string   `json:"associatednetworkname"`
-	Availablevirtualmachinecount int      `json:"availablevirtualmachinecount"`
-	Created                      string   `json:"created"`
-	Domain                       string   `json:"domain"`
-	Domainid                     string   `json:"domainid"`
-	Fordisplay                   bool     `json:"fordisplay"`
-	Hasannotations               bool     `json:"hasannotations"`
-	Id                           string   `json:"id"`
-	Interval                     int      `json:"interval"`
-	JobID                        string   `json:"jobid"`
-	Jobstatus                    int      `json:"jobstatus"`
-	Lbprovider                   string   `json:"lbprovider"`
-	Lbruleid                     string   `json:"lbruleid"`
-	Maxmembers                   int      `json:"maxmembers"`
-	Minmembers                   int      `json:"minmembers"`
-	Name                         string   `json:"name"`
-	Privateport                  string   `json:"privateport"`
-	Project                      string   `json:"project"`
-	Projectid                    string   `json:"projectid"`
-	Publicip                     string   `json:"publicip"`
-	Publicipid                   string   `json:"publicipid"`
-	Publicport                   string   `json:"publicport"`
-	Scaledownpolicies            []string `json:"scaledownpolicies"`
-	Scaleuppolicies              []string `json:"scaleuppolicies"`
-	State                        string   `json:"state"`
-	Vmprofileid                  string   `json:"vmprofileid"`
+	Account                      string             `json:"account"`
+	Associatednetworkid          string             `json:"associatednetworkid"`
+	Associatednetworkname        string             `json:"associatednetworkname"`
+	Availablevirtualmachinecount int                `json:"availablevirtualmachinecount"`
+	Created                      string             `json:"created"`
+	Domain                       string             `json:"domain"`
+	Domainid                     string             `json:"domainid"`
+	Domainpath                   string             `json:"domainpath"`
+	Fordisplay                   bool               `json:"fordisplay"`
+	Hasannotations               bool               `json:"hasannotations"`
+	Id                           string             `json:"id"`
+	Interval                     int                `json:"interval"`
+	JobID                        string             `json:"jobid"`
+	Jobstatus                    int                `json:"jobstatus"`
+	Lbprovider                   string             `json:"lbprovider"`
+	Lbruleid                     string             `json:"lbruleid"`
+	Maxmembers                   int                `json:"maxmembers"`
+	Minmembers                   int                `json:"minmembers"`
+	Name                         string             `json:"name"`
+	Privateport                  string             `json:"privateport"`
+	Project                      string             `json:"project"`
+	Projectid                    string             `json:"projectid"`
+	Publicip                     string             `json:"publicip"`
+	Publicipid                   string             `json:"publicipid"`
+	Publicport                   string             `json:"publicport"`
+	Scaledownpolicies            []*AutoScalePolicy `json:"scaledownpolicies"`
+	Scaleuppolicies              []*AutoScalePolicy `json:"scaleuppolicies"`
+	State                        string             `json:"state"`
+	Vmprofileid                  string             `json:"vmprofileid"`
 }
 
 type ListAutoScalePoliciesParams struct {
@@ -2506,19 +2513,20 @@ type ListAutoScalePoliciesResponse struct {
 }
 
 type AutoScalePolicy struct {
-	Account    string   `json:"account"`
-	Action     string   `json:"action"`
-	Conditions []string `json:"conditions"`
-	Domain     string   `json:"domain"`
-	Domainid   string   `json:"domainid"`
-	Duration   int      `json:"duration"`
-	Id         string   `json:"id"`
-	JobID      string   `json:"jobid"`
-	Jobstatus  int      `json:"jobstatus"`
-	Name       string   `json:"name"`
-	Project    string   `json:"project"`
-	Projectid  string   `json:"projectid"`
-	Quiettime  int      `json:"quiettime"`
+	Account    string       `json:"account"`
+	Action     string       `json:"action"`
+	Conditions []*Condition `json:"conditions"`
+	Domain     string       `json:"domain"`
+	Domainid   string       `json:"domainid"`
+	Domainpath string       `json:"domainpath"`
+	Duration   int          `json:"duration"`
+	Id         string       `json:"id"`
+	JobID      string       `json:"jobid"`
+	Jobstatus  int          `json:"jobstatus"`
+	Name       string       `json:"name"`
+	Project    string       `json:"project"`
+	Projectid  string       `json:"projectid"`
+	Quiettime  int          `json:"quiettime"`
 }
 
 type ListAutoScaleVmGroupsParams struct {
@@ -2989,7 +2997,7 @@ func (s *AutoScaleService) GetAutoScaleVmGroupByID(id string, opts ...OptionFunc
 	return nil, l.Count, fmt.Errorf("There is more then one result for AutoScaleVmGroup UUID: %s!", id)
 }
 
-// Lists autoscale vm groups.
+// Lists autoscale Instance groups.
 func (s *AutoScaleService) ListAutoScaleVmGroups(p *ListAutoScaleVmGroupsParams) (*ListAutoScaleVmGroupsResponse, error) {
 	resp, err := s.cs.newRequest("listAutoScaleVmGroups", p.toURLValues())
 	if err != nil {
@@ -3010,34 +3018,35 @@ type ListAutoScaleVmGroupsResponse struct {
 }
 
 type AutoScaleVmGroup struct {
-	Account                      string   `json:"account"`
-	Associatednetworkid          string   `json:"associatednetworkid"`
-	Associatednetworkname        string   `json:"associatednetworkname"`
-	Availablevirtualmachinecount int      `json:"availablevirtualmachinecount"`
-	Created                      string   `json:"created"`
-	Domain                       string   `json:"domain"`
-	Domainid                     string   `json:"domainid"`
-	Fordisplay                   bool     `json:"fordisplay"`
-	Hasannotations               bool     `json:"hasannotations"`
-	Id                           string   `json:"id"`
-	Interval                     int      `json:"interval"`
-	JobID                        string   `json:"jobid"`
-	Jobstatus                    int      `json:"jobstatus"`
-	Lbprovider                   string   `json:"lbprovider"`
-	Lbruleid                     string   `json:"lbruleid"`
-	Maxmembers                   int      `json:"maxmembers"`
-	Minmembers                   int      `json:"minmembers"`
-	Name                         string   `json:"name"`
-	Privateport                  string   `json:"privateport"`
-	Project                      string   `json:"project"`
-	Projectid                    string   `json:"projectid"`
-	Publicip                     string   `json:"publicip"`
-	Publicipid                   string   `json:"publicipid"`
-	Publicport                   string   `json:"publicport"`
-	Scaledownpolicies            []string `json:"scaledownpolicies"`
-	Scaleuppolicies              []string `json:"scaleuppolicies"`
-	State                        string   `json:"state"`
-	Vmprofileid                  string   `json:"vmprofileid"`
+	Account                      string             `json:"account"`
+	Associatednetworkid          string             `json:"associatednetworkid"`
+	Associatednetworkname        string             `json:"associatednetworkname"`
+	Availablevirtualmachinecount int                `json:"availablevirtualmachinecount"`
+	Created                      string             `json:"created"`
+	Domain                       string             `json:"domain"`
+	Domainid                     string             `json:"domainid"`
+	Domainpath                   string             `json:"domainpath"`
+	Fordisplay                   bool               `json:"fordisplay"`
+	Hasannotations               bool               `json:"hasannotations"`
+	Id                           string             `json:"id"`
+	Interval                     int                `json:"interval"`
+	JobID                        string             `json:"jobid"`
+	Jobstatus                    int                `json:"jobstatus"`
+	Lbprovider                   string             `json:"lbprovider"`
+	Lbruleid                     string             `json:"lbruleid"`
+	Maxmembers                   int                `json:"maxmembers"`
+	Minmembers                   int                `json:"minmembers"`
+	Name                         string             `json:"name"`
+	Privateport                  string             `json:"privateport"`
+	Project                      string             `json:"project"`
+	Projectid                    string             `json:"projectid"`
+	Publicip                     string             `json:"publicip"`
+	Publicipid                   string             `json:"publicipid"`
+	Publicport                   string             `json:"publicport"`
+	Scaledownpolicies            []*AutoScalePolicy `json:"scaledownpolicies"`
+	Scaleuppolicies              []*AutoScalePolicy `json:"scaleuppolicies"`
+	State                        string             `json:"state"`
+	Vmprofileid                  string             `json:"vmprofileid"`
 }
 
 type ListAutoScaleVmProfilesParams struct {
@@ -3434,7 +3443,7 @@ func (s *AutoScaleService) GetAutoScaleVmProfileByID(id string, opts ...OptionFu
 	return nil, l.Count, fmt.Errorf("There is more then one result for AutoScaleVmProfile UUID: %s!", id)
 }
 
-// Lists autoscale vm profiles.
+// Lists autoscale Instance profiles.
 func (s *AutoScaleService) ListAutoScaleVmProfiles(p *ListAutoScaleVmProfilesParams) (*ListAutoScaleVmProfilesResponse, error) {
 	resp, err := s.cs.newRequest("listAutoScaleVmProfiles", p.toURLValues())
 	if err != nil {
@@ -3459,6 +3468,7 @@ type AutoScaleVmProfile struct {
 	Autoscaleuserid      string            `json:"autoscaleuserid"`
 	Domain               string            `json:"domain"`
 	Domainid             string            `json:"domainid"`
+	Domainpath           string            `json:"domainpath"`
 	Expungevmgraceperiod int               `json:"expungevmgraceperiod"`
 	Fordisplay           bool              `json:"fordisplay"`
 	Id                   string            `json:"id"`
@@ -3798,7 +3808,7 @@ func (s *AutoScaleService) GetConditionByID(id string, opts ...OptionFunc) (*Con
 	return nil, l.Count, fmt.Errorf("There is more then one result for Condition UUID: %s!", id)
 }
 
-// List Conditions for VM auto scaling
+// List Conditions for Instance auto scaling
 func (s *AutoScaleService) ListConditions(p *ListConditionsParams) (*ListConditionsResponse, error) {
 	resp, err := s.cs.newRequest("listConditions", p.toURLValues())
 	if err != nil {
@@ -3819,20 +3829,21 @@ type ListConditionsResponse struct {
 }
 
 type Condition struct {
-	Account            string `json:"account"`
-	Counter            string `json:"counter"`
-	Counterid          string `json:"counterid"`
-	Countername        string `json:"countername"`
-	Domain             string `json:"domain"`
-	Domainid           string `json:"domainid"`
-	Id                 string `json:"id"`
-	JobID              string `json:"jobid"`
-	Jobstatus          int    `json:"jobstatus"`
-	Project            string `json:"project"`
-	Projectid          string `json:"projectid"`
-	Relationaloperator string `json:"relationaloperator"`
-	Threshold          int64  `json:"threshold"`
-	Zoneid             string `json:"zoneid"`
+	Account            string   `json:"account"`
+	Counter            *Counter `json:"counter"`
+	Counterid          string   `json:"counterid"`
+	Countername        string   `json:"countername"`
+	Domain             string   `json:"domain"`
+	Domainid           string   `json:"domainid"`
+	Domainpath         string   `json:"domainpath"`
+	Id                 string   `json:"id"`
+	JobID              string   `json:"jobid"`
+	Jobstatus          int      `json:"jobstatus"`
+	Project            string   `json:"project"`
+	Projectid          string   `json:"projectid"`
+	Relationaloperator string   `json:"relationaloperator"`
+	Threshold          int64    `json:"threshold"`
+	Zoneid             string   `json:"zoneid"`
 }
 
 type ListCountersParams struct {
@@ -4108,7 +4119,7 @@ func (s *AutoScaleService) GetCounterByID(id string, opts ...OptionFunc) (*Count
 	return nil, l.Count, fmt.Errorf("There is more then one result for Counter UUID: %s!", id)
 }
 
-// List the counters for VM auto scaling
+// List the counters for Instance auto scaling
 func (s *AutoScaleService) ListCounters(p *ListCountersParams) (*ListCountersResponse, error) {
 	resp, err := s.cs.newRequest("listCounters", p.toURLValues())
 	if err != nil {
@@ -4285,7 +4296,7 @@ func (s *AutoScaleService) NewUpdateAutoScalePolicyParams(id string) *UpdateAuto
 
 // Updates an existing autoscale policy.
 func (s *AutoScaleService) UpdateAutoScalePolicy(p *UpdateAutoScalePolicyParams) (*UpdateAutoScalePolicyResponse, error) {
-	resp, err := s.cs.newRequest("updateAutoScalePolicy", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateAutoScalePolicy", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -4319,19 +4330,20 @@ func (s *AutoScaleService) UpdateAutoScalePolicy(p *UpdateAutoScalePolicyParams)
 }
 
 type UpdateAutoScalePolicyResponse struct {
-	Account    string   `json:"account"`
-	Action     string   `json:"action"`
-	Conditions []string `json:"conditions"`
-	Domain     string   `json:"domain"`
-	Domainid   string   `json:"domainid"`
-	Duration   int      `json:"duration"`
-	Id         string   `json:"id"`
-	JobID      string   `json:"jobid"`
-	Jobstatus  int      `json:"jobstatus"`
-	Name       string   `json:"name"`
-	Project    string   `json:"project"`
-	Projectid  string   `json:"projectid"`
-	Quiettime  int      `json:"quiettime"`
+	Account    string       `json:"account"`
+	Action     string       `json:"action"`
+	Conditions []*Condition `json:"conditions"`
+	Domain     string       `json:"domain"`
+	Domainid   string       `json:"domainid"`
+	Domainpath string       `json:"domainpath"`
+	Duration   int          `json:"duration"`
+	Id         string       `json:"id"`
+	JobID      string       `json:"jobid"`
+	Jobstatus  int          `json:"jobstatus"`
+	Name       string       `json:"name"`
+	Project    string       `json:"project"`
+	Projectid  string       `json:"projectid"`
+	Quiettime  int          `json:"quiettime"`
 }
 
 type UpdateAutoScaleVmGroupParams struct {
@@ -4577,9 +4589,9 @@ func (s *AutoScaleService) NewUpdateAutoScaleVmGroupParams(id string) *UpdateAut
 	return p
 }
 
-// Updates an existing autoscale vm group.
+// Updates an existing autoscale Instance group.
 func (s *AutoScaleService) UpdateAutoScaleVmGroup(p *UpdateAutoScaleVmGroupParams) (*UpdateAutoScaleVmGroupResponse, error) {
-	resp, err := s.cs.newRequest("updateAutoScaleVmGroup", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateAutoScaleVmGroup", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -4613,34 +4625,35 @@ func (s *AutoScaleService) UpdateAutoScaleVmGroup(p *UpdateAutoScaleVmGroupParam
 }
 
 type UpdateAutoScaleVmGroupResponse struct {
-	Account                      string   `json:"account"`
-	Associatednetworkid          string   `json:"associatednetworkid"`
-	Associatednetworkname        string   `json:"associatednetworkname"`
-	Availablevirtualmachinecount int      `json:"availablevirtualmachinecount"`
-	Created                      string   `json:"created"`
-	Domain                       string   `json:"domain"`
-	Domainid                     string   `json:"domainid"`
-	Fordisplay                   bool     `json:"fordisplay"`
-	Hasannotations               bool     `json:"hasannotations"`
-	Id                           string   `json:"id"`
-	Interval                     int      `json:"interval"`
-	JobID                        string   `json:"jobid"`
-	Jobstatus                    int      `json:"jobstatus"`
-	Lbprovider                   string   `json:"lbprovider"`
-	Lbruleid                     string   `json:"lbruleid"`
-	Maxmembers                   int      `json:"maxmembers"`
-	Minmembers                   int      `json:"minmembers"`
-	Name                         string   `json:"name"`
-	Privateport                  string   `json:"privateport"`
-	Project                      string   `json:"project"`
-	Projectid                    string   `json:"projectid"`
-	Publicip                     string   `json:"publicip"`
-	Publicipid                   string   `json:"publicipid"`
-	Publicport                   string   `json:"publicport"`
-	Scaledownpolicies            []string `json:"scaledownpolicies"`
-	Scaleuppolicies              []string `json:"scaleuppolicies"`
-	State                        string   `json:"state"`
-	Vmprofileid                  string   `json:"vmprofileid"`
+	Account                      string             `json:"account"`
+	Associatednetworkid          string             `json:"associatednetworkid"`
+	Associatednetworkname        string             `json:"associatednetworkname"`
+	Availablevirtualmachinecount int                `json:"availablevirtualmachinecount"`
+	Created                      string             `json:"created"`
+	Domain                       string             `json:"domain"`
+	Domainid                     string             `json:"domainid"`
+	Domainpath                   string             `json:"domainpath"`
+	Fordisplay                   bool               `json:"fordisplay"`
+	Hasannotations               bool               `json:"hasannotations"`
+	Id                           string             `json:"id"`
+	Interval                     int                `json:"interval"`
+	JobID                        string             `json:"jobid"`
+	Jobstatus                    int                `json:"jobstatus"`
+	Lbprovider                   string             `json:"lbprovider"`
+	Lbruleid                     string             `json:"lbruleid"`
+	Maxmembers                   int                `json:"maxmembers"`
+	Minmembers                   int                `json:"minmembers"`
+	Name                         string             `json:"name"`
+	Privateport                  string             `json:"privateport"`
+	Project                      string             `json:"project"`
+	Projectid                    string             `json:"projectid"`
+	Publicip                     string             `json:"publicip"`
+	Publicipid                   string             `json:"publicipid"`
+	Publicport                   string             `json:"publicport"`
+	Scaledownpolicies            []*AutoScalePolicy `json:"scaledownpolicies"`
+	Scaleuppolicies              []*AutoScalePolicy `json:"scaleuppolicies"`
+	State                        string             `json:"state"`
+	Vmprofileid                  string             `json:"vmprofileid"`
 }
 
 type UpdateAutoScaleVmProfileParams struct {
@@ -4679,7 +4692,7 @@ func (p *UpdateAutoScaleVmProfileParams) toURLValues() url.Values {
 	if v, found := p.p["otherdeployparams"]; found {
 		m := v.(map[string]string)
 		for i, k := range getSortedKeysFromMap(m) {
-			u.Set(fmt.Sprintf("otherdeployparams[%d].key", i), k)
+			u.Set(fmt.Sprintf("otherdeployparams[%d].name", i), k)
 			u.Set(fmt.Sprintf("otherdeployparams[%d].value", i), m[k])
 		}
 	}
@@ -4695,8 +4708,7 @@ func (p *UpdateAutoScaleVmProfileParams) toURLValues() url.Values {
 	if v, found := p.p["userdatadetails"]; found {
 		m := v.(map[string]string)
 		for i, k := range getSortedKeysFromMap(m) {
-			u.Set(fmt.Sprintf("userdatadetails[%d].key", i), k)
-			u.Set(fmt.Sprintf("userdatadetails[%d].value", i), m[k])
+			u.Set(fmt.Sprintf("userdatadetails[%d].%s", i, k), m[k])
 		}
 	}
 	if v, found := p.p["userdataid"]; found {
@@ -4966,9 +4978,9 @@ func (s *AutoScaleService) NewUpdateAutoScaleVmProfileParams(id string) *UpdateA
 	return p
 }
 
-// Updates an existing autoscale vm profile.
+// Updates an existing autoscale Instance profile.
 func (s *AutoScaleService) UpdateAutoScaleVmProfile(p *UpdateAutoScaleVmProfileParams) (*UpdateAutoScaleVmProfileResponse, error) {
-	resp, err := s.cs.newRequest("updateAutoScaleVmProfile", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateAutoScaleVmProfile", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -5006,6 +5018,7 @@ type UpdateAutoScaleVmProfileResponse struct {
 	Autoscaleuserid      string            `json:"autoscaleuserid"`
 	Domain               string            `json:"domain"`
 	Domainid             string            `json:"domainid"`
+	Domainpath           string            `json:"domainpath"`
 	Expungevmgraceperiod int               `json:"expungevmgraceperiod"`
 	Fordisplay           bool              `json:"fordisplay"`
 	Id                   string            `json:"id"`
@@ -5022,4 +5035,137 @@ type UpdateAutoScaleVmProfileResponse struct {
 	Userdataname         string            `json:"userdataname"`
 	Userdatapolicy       string            `json:"userdatapolicy"`
 	Zoneid               string            `json:"zoneid"`
+}
+
+type UpdateConditionParams struct {
+	p map[string]interface{}
+}
+
+func (p *UpdateConditionParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["id"]; found {
+		u.Set("id", v.(string))
+	}
+	if v, found := p.p["relationaloperator"]; found {
+		u.Set("relationaloperator", v.(string))
+	}
+	if v, found := p.p["threshold"]; found {
+		vv := strconv.FormatInt(v.(int64), 10)
+		u.Set("threshold", vv)
+	}
+	return u
+}
+
+func (p *UpdateConditionParams) SetId(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["id"] = v
+}
+
+func (p *UpdateConditionParams) ResetId() {
+	if p.p != nil && p.p["id"] != nil {
+		delete(p.p, "id")
+	}
+}
+
+func (p *UpdateConditionParams) GetId() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["id"].(string)
+	return value, ok
+}
+
+func (p *UpdateConditionParams) SetRelationaloperator(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["relationaloperator"] = v
+}
+
+func (p *UpdateConditionParams) ResetRelationaloperator() {
+	if p.p != nil && p.p["relationaloperator"] != nil {
+		delete(p.p, "relationaloperator")
+	}
+}
+
+func (p *UpdateConditionParams) GetRelationaloperator() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["relationaloperator"].(string)
+	return value, ok
+}
+
+func (p *UpdateConditionParams) SetThreshold(v int64) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["threshold"] = v
+}
+
+func (p *UpdateConditionParams) ResetThreshold() {
+	if p.p != nil && p.p["threshold"] != nil {
+		delete(p.p, "threshold")
+	}
+}
+
+func (p *UpdateConditionParams) GetThreshold() (int64, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["threshold"].(int64)
+	return value, ok
+}
+
+// You should always use this function to get a new UpdateConditionParams instance,
+// as then you are sure you have configured all required params
+func (s *AutoScaleService) NewUpdateConditionParams(id string, relationaloperator string, threshold int64) *UpdateConditionParams {
+	p := &UpdateConditionParams{}
+	p.p = make(map[string]interface{})
+	p.p["id"] = id
+	p.p["relationaloperator"] = relationaloperator
+	p.p["threshold"] = threshold
+	return p
+}
+
+// Updates a condition for Instance auto scaling
+func (s *AutoScaleService) UpdateCondition(p *UpdateConditionParams) (*UpdateConditionResponse, error) {
+	resp, err := s.cs.newPostRequest("updateCondition", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var r UpdateConditionResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return nil, err
+	}
+
+	// If we have a async client, we need to wait for the async result
+	if s.cs.async {
+		b, err := s.cs.GetAsyncJobResult(r.JobID, s.cs.timeout)
+		if err != nil {
+			if err == AsyncTimeoutErr {
+				return &r, err
+			}
+			return nil, err
+		}
+
+		if err := json.Unmarshal(b, &r); err != nil {
+			return nil, err
+		}
+	}
+
+	return &r, nil
+}
+
+type UpdateConditionResponse struct {
+	Displaytext string `json:"displaytext"`
+	JobID       string `json:"jobid"`
+	Jobstatus   int    `json:"jobstatus"`
+	Success     bool   `json:"success"`
 }

@@ -54,7 +54,7 @@ func TestVPCService(t *testing.T) {
 		if _, ok := response["createStaticRoute"]; !ok {
 			t.Skipf("Skipping as no json response is provided in testdata")
 		}
-		p := client.VPC.NewCreateStaticRouteParams("cidr", "gatewayid")
+		p := client.VPC.NewCreateStaticRouteParams("cidr")
 		r, err := client.VPC.CreateStaticRoute(p)
 		if err != nil {
 			t.Errorf(err.Error())
@@ -84,7 +84,7 @@ func TestVPCService(t *testing.T) {
 		if _, ok := response["createVPCOffering"]; !ok {
 			t.Skipf("Skipping as no json response is provided in testdata")
 		}
-		p := client.VPC.NewCreateVPCOfferingParams("displaytext", "name", []string{})
+		p := client.VPC.NewCreateVPCOfferingParams("displaytext", "name")
 		r, err := client.VPC.CreateVPCOffering(p)
 		if err != nil {
 			t.Errorf(err.Error())
@@ -190,6 +190,21 @@ func TestVPCService(t *testing.T) {
 		}
 	}
 	t.Run("ListVPCs", testlistVPCs)
+
+	testmigrateVPC := func(t *testing.T) {
+		if _, ok := response["migrateVPC"]; !ok {
+			t.Skipf("Skipping as no json response is provided in testdata")
+		}
+		p := client.VPC.NewMigrateVPCParams("vpcid", "vpcofferingid")
+		r, err := client.VPC.MigrateVPC(p)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if r.Id == "" {
+			t.Errorf("Failed to parse response. ID not found")
+		}
+	}
+	t.Run("MigrateVPC", testmigrateVPC)
 
 	testrestartVPC := func(t *testing.T) {
 		if _, ok := response["restartVPC"]; !ok {

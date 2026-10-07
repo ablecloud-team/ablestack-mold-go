@@ -39,6 +39,8 @@ type AlertServiceIface interface {
 	GetAlertID(name string, opts ...OptionFunc) (string, int, error)
 	GetAlertByName(name string, opts ...OptionFunc) (*Alert, int, error)
 	GetAlertByID(id string, opts ...OptionFunc) (*Alert, int, error)
+	ListAlertTypes(p *ListAlertTypesParams) (*ListAlertTypesResponse, error)
+	NewListAlertTypesParams() *ListAlertTypesParams
 }
 
 type ArchiveAlertsParams struct {
@@ -160,7 +162,7 @@ func (s *AlertService) NewArchiveAlertsParams() *ArchiveAlertsParams {
 
 // Archive one or more alerts.
 func (s *AlertService) ArchiveAlerts(p *ArchiveAlertsParams) (*ArchiveAlertsResponse, error) {
-	resp, err := s.cs.newRequest("archiveAlerts", p.toURLValues())
+	resp, err := s.cs.newPostRequest("archiveAlerts", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +328,7 @@ func (s *AlertService) NewDeleteAlertsParams() *DeleteAlertsParams {
 
 // Delete one or more alerts.
 func (s *AlertService) DeleteAlerts(p *DeleteAlertsParams) (*DeleteAlertsResponse, error) {
-	resp, err := s.cs.newRequest("deleteAlerts", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteAlerts", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -519,7 +521,7 @@ func (s *AlertService) NewGenerateAlertParams(description string, name string, a
 
 // Generates an alert
 func (s *AlertService) GenerateAlert(p *GenerateAlertParams) (*GenerateAlertResponse, error) {
-	resp, err := s.cs.newRequest("generateAlert", p.toURLValues())
+	resp, err := s.cs.newPostRequest("generateAlert", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -824,6 +826,56 @@ type ListAlertsResponse struct {
 }
 
 type Alert struct {
+	Description string `json:"description"`
+	Id          string `json:"id"`
+	JobID       string `json:"jobid"`
+	Jobstatus   int    `json:"jobstatus"`
+	Name        string `json:"name"`
+	Sent        string `json:"sent"`
+	Type        int    `json:"type"`
+}
+
+type ListAlertTypesParams struct {
+	p map[string]interface{}
+}
+
+func (p *ListAlertTypesParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	return u
+}
+
+// You should always use this function to get a new ListAlertTypesParams instance,
+// as then you are sure you have configured all required params
+func (s *AlertService) NewListAlertTypesParams() *ListAlertTypesParams {
+	p := &ListAlertTypesParams{}
+	p.p = make(map[string]interface{})
+	return p
+}
+
+// Lists all alerts types
+func (s *AlertService) ListAlertTypes(p *ListAlertTypesParams) (*ListAlertTypesResponse, error) {
+	resp, err := s.cs.newRequest("listAlertTypes", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var r ListAlertTypesResponse
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return nil, err
+	}
+
+	return &r, nil
+}
+
+type ListAlertTypesResponse struct {
+	Count      int          `json:"count"`
+	AlertTypes []*AlertType `json:"alerttype"`
+}
+
+type AlertType struct {
 	Description string `json:"description"`
 	Id          string `json:"id"`
 	JobID       string `json:"jobid"`

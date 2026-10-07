@@ -50,9 +50,13 @@ var requiredParams = map[string][]string{
 	},
 	"createVPC": {
 		"displaytext",
+		"cidr",
 	},
 	"createVPCOffering": {
 		"displaytext",
+	},
+	"deployVirtualMachine": {
+		"templateid",
 	},
 	"disassociateIpAddress": {
 		"id",
@@ -65,5 +69,11 @@ var requiredParams = map[string][]string{
 	},
 	"registerTemplate": {
 		"displaytext",
+	},
+	"queryAsyncJobResult": {
+		"jobid",
+	},
+	"updateGuestOs": {
+		"osdisplayname",
 	},
 }

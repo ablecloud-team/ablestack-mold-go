@@ -78,6 +78,10 @@ func (p *CreateNetworkOfferingParams) toURLValues() url.Values {
 		vv := strconv.FormatBool(v.(bool))
 		u.Set("enable", vv)
 	}
+	if v, found := p.p["fornsx"]; found {
+		vv := strconv.FormatBool(v.(bool))
+		u.Set("fornsx", vv)
+	}
 	if v, found := p.p["fortungsten"]; found {
 		vv := strconv.FormatBool(v.(bool))
 		u.Set("fortungsten", vv)
@@ -107,15 +111,33 @@ func (p *CreateNetworkOfferingParams) toURLValues() url.Values {
 	if v, found := p.p["name"]; found {
 		u.Set("name", v.(string))
 	}
+	if v, found := p.p["networkmode"]; found {
+		u.Set("networkmode", v.(string))
+	}
 	if v, found := p.p["networkrate"]; found {
 		vv := strconv.Itoa(v.(int))
 		u.Set("networkrate", vv)
 	}
+	if v, found := p.p["nsxsupportlb"]; found {
+		vv := strconv.FormatBool(v.(bool))
+		u.Set("nsxsupportlb", vv)
+	}
+	if v, found := p.p["nsxsupportsinternallb"]; found {
+		vv := strconv.FormatBool(v.(bool))
+		u.Set("nsxsupportsinternallb", vv)
+	}
+	if v, found := p.p["provider"]; found {
+		u.Set("provider", v.(string))
+	}
+	if v, found := p.p["routingmode"]; found {
+		u.Set("routingmode", v.(string))
+	}
 	if v, found := p.p["servicecapabilitylist"]; found {
-		m := v.(map[string]string)
-		for i, k := range getSortedKeysFromMap(m) {
-			u.Set(fmt.Sprintf("servicecapabilitylist[%d].key", i), k)
-			u.Set(fmt.Sprintf("servicecapabilitylist[%d].value", i), m[k])
+		l := v.([]map[string]string)
+		for i, m := range l {
+			for key, val := range m {
+				u.Set(fmt.Sprintf("servicecapabilitylist[%d].%s", i, key), val)
+			}
 		}
 	}
 	if v, found := p.p["serviceofferingid"]; found {
@@ -127,6 +149,10 @@ func (p *CreateNetworkOfferingParams) toURLValues() url.Values {
 			u.Set(fmt.Sprintf("serviceproviderlist[%d].service", i), k)
 			u.Set(fmt.Sprintf("serviceproviderlist[%d].provider", i), m[k])
 		}
+	}
+	if v, found := p.p["specifyasnumber"]; found {
+		vv := strconv.FormatBool(v.(bool))
+		u.Set("specifyasnumber", vv)
 	}
 	if v, found := p.p["specifyipranges"]; found {
 		vv := strconv.FormatBool(v.(bool))
@@ -300,6 +326,27 @@ func (p *CreateNetworkOfferingParams) GetEnable() (bool, bool) {
 	return value, ok
 }
 
+func (p *CreateNetworkOfferingParams) SetFornsx(v bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["fornsx"] = v
+}
+
+func (p *CreateNetworkOfferingParams) ResetFornsx() {
+	if p.p != nil && p.p["fornsx"] != nil {
+		delete(p.p, "fornsx")
+	}
+}
+
+func (p *CreateNetworkOfferingParams) GetFornsx() (bool, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["fornsx"].(bool)
+	return value, ok
+}
+
 func (p *CreateNetworkOfferingParams) SetFortungsten(v bool) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
@@ -468,6 +515,27 @@ func (p *CreateNetworkOfferingParams) GetName() (string, bool) {
 	return value, ok
 }
 
+func (p *CreateNetworkOfferingParams) SetNetworkmode(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["networkmode"] = v
+}
+
+func (p *CreateNetworkOfferingParams) ResetNetworkmode() {
+	if p.p != nil && p.p["networkmode"] != nil {
+		delete(p.p, "networkmode")
+	}
+}
+
+func (p *CreateNetworkOfferingParams) GetNetworkmode() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["networkmode"].(string)
+	return value, ok
+}
+
 func (p *CreateNetworkOfferingParams) SetNetworkrate(v int) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
@@ -489,7 +557,91 @@ func (p *CreateNetworkOfferingParams) GetNetworkrate() (int, bool) {
 	return value, ok
 }
 
-func (p *CreateNetworkOfferingParams) SetServicecapabilitylist(v map[string]string) {
+func (p *CreateNetworkOfferingParams) SetNsxsupportlb(v bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["nsxsupportlb"] = v
+}
+
+func (p *CreateNetworkOfferingParams) ResetNsxsupportlb() {
+	if p.p != nil && p.p["nsxsupportlb"] != nil {
+		delete(p.p, "nsxsupportlb")
+	}
+}
+
+func (p *CreateNetworkOfferingParams) GetNsxsupportlb() (bool, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["nsxsupportlb"].(bool)
+	return value, ok
+}
+
+func (p *CreateNetworkOfferingParams) SetNsxsupportsinternallb(v bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["nsxsupportsinternallb"] = v
+}
+
+func (p *CreateNetworkOfferingParams) ResetNsxsupportsinternallb() {
+	if p.p != nil && p.p["nsxsupportsinternallb"] != nil {
+		delete(p.p, "nsxsupportsinternallb")
+	}
+}
+
+func (p *CreateNetworkOfferingParams) GetNsxsupportsinternallb() (bool, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["nsxsupportsinternallb"].(bool)
+	return value, ok
+}
+
+func (p *CreateNetworkOfferingParams) SetProvider(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["provider"] = v
+}
+
+func (p *CreateNetworkOfferingParams) ResetProvider() {
+	if p.p != nil && p.p["provider"] != nil {
+		delete(p.p, "provider")
+	}
+}
+
+func (p *CreateNetworkOfferingParams) GetProvider() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["provider"].(string)
+	return value, ok
+}
+
+func (p *CreateNetworkOfferingParams) SetRoutingmode(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["routingmode"] = v
+}
+
+func (p *CreateNetworkOfferingParams) ResetRoutingmode() {
+	if p.p != nil && p.p["routingmode"] != nil {
+		delete(p.p, "routingmode")
+	}
+}
+
+func (p *CreateNetworkOfferingParams) GetRoutingmode() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["routingmode"].(string)
+	return value, ok
+}
+
+func (p *CreateNetworkOfferingParams) SetServicecapabilitylist(v []map[string]string) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
 	}
@@ -502,12 +654,26 @@ func (p *CreateNetworkOfferingParams) ResetServicecapabilitylist() {
 	}
 }
 
-func (p *CreateNetworkOfferingParams) GetServicecapabilitylist() (map[string]string, bool) {
+func (p *CreateNetworkOfferingParams) GetServicecapabilitylist() ([]map[string]string, bool) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
 	}
-	value, ok := p.p["servicecapabilitylist"].(map[string]string)
+	value, ok := p.p["servicecapabilitylist"].([]map[string]string)
 	return value, ok
+}
+
+func (p *CreateNetworkOfferingParams) AddServicecapabilitylist(item map[string]string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	val, found := p.p["servicecapabilitylist"]
+	if !found {
+		p.p["servicecapabilitylist"] = []map[string]string{}
+		val = p.p["servicecapabilitylist"]
+	}
+	l := val.([]map[string]string)
+	l = append(l, item)
+	p.p["servicecapabilitylist"] = l
 }
 
 func (p *CreateNetworkOfferingParams) SetServiceofferingid(v string) {
@@ -549,6 +715,27 @@ func (p *CreateNetworkOfferingParams) GetServiceproviderlist() (map[string]strin
 		p.p = make(map[string]interface{})
 	}
 	value, ok := p.p["serviceproviderlist"].(map[string]string)
+	return value, ok
+}
+
+func (p *CreateNetworkOfferingParams) SetSpecifyasnumber(v bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["specifyasnumber"] = v
+}
+
+func (p *CreateNetworkOfferingParams) ResetSpecifyasnumber() {
+	if p.p != nil && p.p["specifyasnumber"] != nil {
+		delete(p.p, "specifyasnumber")
+	}
+}
+
+func (p *CreateNetworkOfferingParams) GetSpecifyasnumber() (bool, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["specifyasnumber"].(bool)
 	return value, ok
 }
 
@@ -692,7 +879,7 @@ func (s *NetworkOfferingService) NewCreateNetworkOfferingParams(displaytext stri
 
 // Creates a network offering.
 func (s *NetworkOfferingService) CreateNetworkOffering(p *CreateNetworkOfferingParams) (*CreateNetworkOfferingResponse, error) {
-	resp, err := s.cs.newRequest("createNetworkOffering", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createNetworkOffering", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -718,6 +905,7 @@ type CreateNetworkOfferingResponse struct {
 	Domain                   string                                 `json:"domain"`
 	Domainid                 string                                 `json:"domainid"`
 	Egressdefaultpolicy      bool                                   `json:"egressdefaultpolicy"`
+	Fornsx                   bool                                   `json:"fornsx"`
 	Fortungsten              bool                                   `json:"fortungsten"`
 	Forvpc                   bool                                   `json:"forvpc"`
 	Guestiptype              string                                 `json:"guestiptype"`
@@ -730,12 +918,16 @@ type CreateNetworkOfferingResponse struct {
 	Jobstatus                int                                    `json:"jobstatus"`
 	Maxconnections           int                                    `json:"maxconnections"`
 	Name                     string                                 `json:"name"`
+	Networkmode              string                                 `json:"networkmode"`
 	Networkrate              int                                    `json:"networkrate"`
+	Routingmode              string                                 `json:"routingmode"`
 	Service                  []CreateNetworkOfferingResponseService `json:"service"`
 	Serviceofferingid        string                                 `json:"serviceofferingid"`
+	Specifyasnumber          bool                                   `json:"specifyasnumber"`
 	Specifyipranges          bool                                   `json:"specifyipranges"`
 	Specifyvlan              bool                                   `json:"specifyvlan"`
 	State                    string                                 `json:"state"`
+	Supportsinternallb       bool                                   `json:"supportsinternallb"`
 	Supportspublicaccess     bool                                   `json:"supportspublicaccess"`
 	Supportsstrechedl2subnet bool                                   `json:"supportsstrechedl2subnet"`
 	Tags                     string                                 `json:"tags"`
@@ -813,7 +1005,7 @@ func (s *NetworkOfferingService) NewDeleteNetworkOfferingParams(id string) *Dele
 
 // Deletes a network offering.
 func (s *NetworkOfferingService) DeleteNetworkOffering(p *DeleteNetworkOfferingParams) (*DeleteNetworkOfferingResponse, error) {
-	resp, err := s.cs.newRequest("deleteNetworkOffering", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteNetworkOffering", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -912,6 +1104,9 @@ func (p *ListNetworkOfferingsParams) toURLValues() url.Values {
 	if v, found := p.p["pagesize"]; found {
 		vv := strconv.Itoa(v.(int))
 		u.Set("pagesize", vv)
+	}
+	if v, found := p.p["routingmode"]; found {
+		u.Set("routingmode", v.(string))
 	}
 	if v, found := p.p["sourcenatsupported"]; found {
 		vv := strconv.FormatBool(v.(bool))
@@ -1217,6 +1412,27 @@ func (p *ListNetworkOfferingsParams) GetPagesize() (int, bool) {
 	return value, ok
 }
 
+func (p *ListNetworkOfferingsParams) SetRoutingmode(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["routingmode"] = v
+}
+
+func (p *ListNetworkOfferingsParams) ResetRoutingmode() {
+	if p.p != nil && p.p["routingmode"] != nil {
+		delete(p.p, "routingmode")
+	}
+}
+
+func (p *ListNetworkOfferingsParams) GetRoutingmode() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["routingmode"].(string)
+	return value, ok
+}
+
 func (p *ListNetworkOfferingsParams) SetSourcenatsupported(v bool) {
 	if p.p == nil {
 		p.p = make(map[string]interface{})
@@ -1505,6 +1721,7 @@ type NetworkOffering struct {
 	Domain                   string                           `json:"domain"`
 	Domainid                 string                           `json:"domainid"`
 	Egressdefaultpolicy      bool                             `json:"egressdefaultpolicy"`
+	Fornsx                   bool                             `json:"fornsx"`
 	Fortungsten              bool                             `json:"fortungsten"`
 	Forvpc                   bool                             `json:"forvpc"`
 	Guestiptype              string                           `json:"guestiptype"`
@@ -1517,12 +1734,16 @@ type NetworkOffering struct {
 	Jobstatus                int                              `json:"jobstatus"`
 	Maxconnections           int                              `json:"maxconnections"`
 	Name                     string                           `json:"name"`
+	Networkmode              string                           `json:"networkmode"`
 	Networkrate              int                              `json:"networkrate"`
+	Routingmode              string                           `json:"routingmode"`
 	Service                  []NetworkOfferingServiceInternal `json:"service"`
 	Serviceofferingid        string                           `json:"serviceofferingid"`
+	Specifyasnumber          bool                             `json:"specifyasnumber"`
 	Specifyipranges          bool                             `json:"specifyipranges"`
 	Specifyvlan              bool                             `json:"specifyvlan"`
 	State                    string                           `json:"state"`
+	Supportsinternallb       bool                             `json:"supportsinternallb"`
 	Supportspublicaccess     bool                             `json:"supportspublicaccess"`
 	Supportsstrechedl2subnet bool                             `json:"supportsstrechedl2subnet"`
 	Tags                     string                           `json:"tags"`
@@ -1842,7 +2063,7 @@ func (s *NetworkOfferingService) NewUpdateNetworkOfferingParams() *UpdateNetwork
 
 // Updates a network offering.
 func (s *NetworkOfferingService) UpdateNetworkOffering(p *UpdateNetworkOfferingParams) (*UpdateNetworkOfferingResponse, error) {
-	resp, err := s.cs.newRequest("updateNetworkOffering", p.toURLValues())
+	resp, err := s.cs.newPostRequest("updateNetworkOffering", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1868,6 +2089,7 @@ type UpdateNetworkOfferingResponse struct {
 	Domain                   string                                 `json:"domain"`
 	Domainid                 string                                 `json:"domainid"`
 	Egressdefaultpolicy      bool                                   `json:"egressdefaultpolicy"`
+	Fornsx                   bool                                   `json:"fornsx"`
 	Fortungsten              bool                                   `json:"fortungsten"`
 	Forvpc                   bool                                   `json:"forvpc"`
 	Guestiptype              string                                 `json:"guestiptype"`
@@ -1880,12 +2102,16 @@ type UpdateNetworkOfferingResponse struct {
 	Jobstatus                int                                    `json:"jobstatus"`
 	Maxconnections           int                                    `json:"maxconnections"`
 	Name                     string                                 `json:"name"`
+	Networkmode              string                                 `json:"networkmode"`
 	Networkrate              int                                    `json:"networkrate"`
+	Routingmode              string                                 `json:"routingmode"`
 	Service                  []UpdateNetworkOfferingResponseService `json:"service"`
 	Serviceofferingid        string                                 `json:"serviceofferingid"`
+	Specifyasnumber          bool                                   `json:"specifyasnumber"`
 	Specifyipranges          bool                                   `json:"specifyipranges"`
 	Specifyvlan              bool                                   `json:"specifyvlan"`
 	State                    string                                 `json:"state"`
+	Supportsinternallb       bool                                   `json:"supportsinternallb"`
 	Supportspublicaccess     bool                                   `json:"supportspublicaccess"`
 	Supportsstrechedl2subnet bool                                   `json:"supportsstrechedl2subnet"`
 	Tags                     string                                 `json:"tags"`

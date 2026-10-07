@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/ablecloud-team/ablestack-mold-go/v2/cloudstack"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func Test_Mock(t *testing.T) {

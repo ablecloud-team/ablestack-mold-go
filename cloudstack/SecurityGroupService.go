@@ -77,6 +77,8 @@ type SecurityGroupServiceIface interface {
 	NewRevokeSecurityGroupEgressParams(id string) *RevokeSecurityGroupEgressParams
 	RevokeSecurityGroupIngress(p *RevokeSecurityGroupIngressParams) (*RevokeSecurityGroupIngressResponse, error)
 	NewRevokeSecurityGroupIngressParams(id string) *RevokeSecurityGroupIngressParams
+	UpdateSecurityGroup(p *UpdateSecurityGroupParams) (*UpdateSecurityGroupResponse, error)
+	NewUpdateSecurityGroupParams(id string) *UpdateSecurityGroupParams
 }
 
 type AuthorizeSecurityGroupEgressParams struct {
@@ -398,7 +400,7 @@ func (s *SecurityGroupService) NewAuthorizeSecurityGroupEgressParams() *Authoriz
 
 // Authorizes a particular egress rule for this security group
 func (s *SecurityGroupService) AuthorizeSecurityGroupEgress(p *AuthorizeSecurityGroupEgressParams) (*AuthorizeSecurityGroupEgressResponse, error) {
-	resp, err := s.cs.newRequest("authorizeSecurityGroupEgress", p.toURLValues())
+	resp, err := s.cs.newPostRequest("authorizeSecurityGroupEgress", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -770,7 +772,7 @@ func (s *SecurityGroupService) NewAuthorizeSecurityGroupIngressParams() *Authori
 
 // Authorizes a particular ingress rule for this security group
 func (s *SecurityGroupService) AuthorizeSecurityGroupIngress(p *AuthorizeSecurityGroupIngressParams) (*AuthorizeSecurityGroupIngressResponse, error) {
-	resp, err := s.cs.newRequest("authorizeSecurityGroupIngress", p.toURLValues())
+	resp, err := s.cs.newPostRequest("authorizeSecurityGroupIngress", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -966,7 +968,7 @@ func (s *SecurityGroupService) NewCreateSecurityGroupParams(name string) *Create
 
 // Creates a security group
 func (s *SecurityGroupService) CreateSecurityGroup(p *CreateSecurityGroupParams) (*CreateSecurityGroupResponse, error) {
-	resp, err := s.cs.newRequest("createSecurityGroup", p.toURLValues())
+	resp, err := s.cs.newPostRequest("createSecurityGroup", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -988,6 +990,7 @@ type CreateSecurityGroupResponse struct {
 	Description         string                            `json:"description"`
 	Domain              string                            `json:"domain"`
 	Domainid            string                            `json:"domainid"`
+	Domainpath          string                            `json:"domainpath"`
 	Egressrule          []CreateSecurityGroupResponseRule `json:"egressrule"`
 	Id                  string                            `json:"id"`
 	Ingressrule         []CreateSecurityGroupResponseRule `json:"ingressrule"`
@@ -1156,7 +1159,7 @@ func (s *SecurityGroupService) NewDeleteSecurityGroupParams() *DeleteSecurityGro
 
 // Deletes security group
 func (s *SecurityGroupService) DeleteSecurityGroup(p *DeleteSecurityGroupParams) (*DeleteSecurityGroupResponse, error) {
-	resp, err := s.cs.newRequest("deleteSecurityGroup", p.toURLValues())
+	resp, err := s.cs.newPostRequest("deleteSecurityGroup", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1627,6 +1630,7 @@ type SecurityGroup struct {
 	Description         string              `json:"description"`
 	Domain              string              `json:"domain"`
 	Domainid            string              `json:"domainid"`
+	Domainpath          string              `json:"domainpath"`
 	Egressrule          []SecurityGroupRule `json:"egressrule"`
 	Id                  string              `json:"id"`
 	Ingressrule         []SecurityGroupRule `json:"ingressrule"`
@@ -1700,7 +1704,7 @@ func (s *SecurityGroupService) NewRevokeSecurityGroupEgressParams(id string) *Re
 
 // Deletes a particular egress rule from this security group
 func (s *SecurityGroupService) RevokeSecurityGroupEgress(p *RevokeSecurityGroupEgressParams) (*RevokeSecurityGroupEgressResponse, error) {
-	resp, err := s.cs.newRequest("revokeSecurityGroupEgress", p.toURLValues())
+	resp, err := s.cs.newPostRequest("revokeSecurityGroupEgress", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1782,7 +1786,7 @@ func (s *SecurityGroupService) NewRevokeSecurityGroupIngressParams(id string) *R
 
 // Deletes a particular ingress rule from this security group
 func (s *SecurityGroupService) RevokeSecurityGroupIngress(p *RevokeSecurityGroupIngressParams) (*RevokeSecurityGroupIngressResponse, error) {
-	resp, err := s.cs.newRequest("revokeSecurityGroupIngress", p.toURLValues())
+	resp, err := s.cs.newPostRequest("revokeSecurityGroupIngress", p.toURLValues())
 	if err != nil {
 		return nil, err
 	}
@@ -1815,4 +1819,147 @@ type RevokeSecurityGroupIngressResponse struct {
 	JobID       string `json:"jobid"`
 	Jobstatus   int    `json:"jobstatus"`
 	Success     bool   `json:"success"`
+}
+
+type UpdateSecurityGroupParams struct {
+	p map[string]interface{}
+}
+
+func (p *UpdateSecurityGroupParams) toURLValues() url.Values {
+	u := url.Values{}
+	if p.p == nil {
+		return u
+	}
+	if v, found := p.p["customid"]; found {
+		u.Set("customid", v.(string))
+	}
+	if v, found := p.p["id"]; found {
+		u.Set("id", v.(string))
+	}
+	if v, found := p.p["name"]; found {
+		u.Set("name", v.(string))
+	}
+	return u
+}
+
+func (p *UpdateSecurityGroupParams) SetCustomid(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["customid"] = v
+}
+
+func (p *UpdateSecurityGroupParams) ResetCustomid() {
+	if p.p != nil && p.p["customid"] != nil {
+		delete(p.p, "customid")
+	}
+}
+
+func (p *UpdateSecurityGroupParams) GetCustomid() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["customid"].(string)
+	return value, ok
+}
+
+func (p *UpdateSecurityGroupParams) SetId(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["id"] = v
+}
+
+func (p *UpdateSecurityGroupParams) ResetId() {
+	if p.p != nil && p.p["id"] != nil {
+		delete(p.p, "id")
+	}
+}
+
+func (p *UpdateSecurityGroupParams) GetId() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["id"].(string)
+	return value, ok
+}
+
+func (p *UpdateSecurityGroupParams) SetName(v string) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	p.p["name"] = v
+}
+
+func (p *UpdateSecurityGroupParams) ResetName() {
+	if p.p != nil && p.p["name"] != nil {
+		delete(p.p, "name")
+	}
+}
+
+func (p *UpdateSecurityGroupParams) GetName() (string, bool) {
+	if p.p == nil {
+		p.p = make(map[string]interface{})
+	}
+	value, ok := p.p["name"].(string)
+	return value, ok
+}
+
+// You should always use this function to get a new UpdateSecurityGroupParams instance,
+// as then you are sure you have configured all required params
+func (s *SecurityGroupService) NewUpdateSecurityGroupParams(id string) *UpdateSecurityGroupParams {
+	p := &UpdateSecurityGroupParams{}
+	p.p = make(map[string]interface{})
+	p.p["id"] = id
+	return p
+}
+
+// Updates a security group
+func (s *SecurityGroupService) UpdateSecurityGroup(p *UpdateSecurityGroupParams) (*UpdateSecurityGroupResponse, error) {
+	resp, err := s.cs.newPostRequest("updateSecurityGroup", p.toURLValues())
+	if err != nil {
+		return nil, err
+	}
+
+	var nested struct {
+		Response UpdateSecurityGroupResponse `json:"securitygroup"`
+	}
+	if err := json.Unmarshal(resp, &nested); err != nil {
+		return nil, err
+	}
+	r := nested.Response
+
+	return &r, nil
+}
+
+type UpdateSecurityGroupResponse struct {
+	Account             string                            `json:"account"`
+	Description         string                            `json:"description"`
+	Domain              string                            `json:"domain"`
+	Domainid            string                            `json:"domainid"`
+	Domainpath          string                            `json:"domainpath"`
+	Egressrule          []UpdateSecurityGroupResponseRule `json:"egressrule"`
+	Id                  string                            `json:"id"`
+	Ingressrule         []UpdateSecurityGroupResponseRule `json:"ingressrule"`
+	JobID               string                            `json:"jobid"`
+	Jobstatus           int                               `json:"jobstatus"`
+	Name                string                            `json:"name"`
+	Project             string                            `json:"project"`
+	Projectid           string                            `json:"projectid"`
+	Tags                []Tags                            `json:"tags"`
+	Virtualmachinecount int                               `json:"virtualmachinecount"`
+	Virtualmachineids   []interface{}                     `json:"virtualmachineids"`
+}
+
+type UpdateSecurityGroupResponseRule struct {
+	Account           string `json:"account"`
+	Cidr              string `json:"cidr"`
+	Endport           int    `json:"endport"`
+	Icmpcode          int    `json:"icmpcode"`
+	Icmptype          int    `json:"icmptype"`
+	Protocol          string `json:"protocol"`
+	Ruleid            string `json:"ruleid"`
+	Securitygroupname string `json:"securitygroupname"`
+	Startport         int    `json:"startport"`
+	Tags              []Tags `json:"tags"`
 }
